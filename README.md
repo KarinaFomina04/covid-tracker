@@ -1,6 +1,6 @@
 # COVID-19 Tracker
 
-COVID-19 Tracker — веб-приложение для мониторинга распространения коронавирусной инфекции и представления эпидемиологической статистики в понятном интерфейсе. Клиентская часть написана на React, серверная — на NestJS и предоставляет HTTP API.
+COVID-19 Tracker — веб-приложение для мониторинга распространения коронавирусной инфекции и представления эпидемиологической статистики в понятном интерфейсе. Клиентская часть написана на React, серверная — на NestJS и предоставляет HTTP API для получения глобальной статистики и данных по странам.
 
 ## Содержание
 
@@ -16,11 +16,12 @@ COVID-19 Tracker — веб-приложение для мониторинга �
 - React 17.0.1, React DOM 17.0.1, TypeScript 4.1.3.
 - Create React App (`react-scripts` 4.0.1).
 - NestJS 7.6.5, Node.js 14 LTS.
+- Axios 0.21.1, csv-parse 4.15.0, class-validator 0.12.2.
 - Jest 26 и React Testing Library 11.
 
 ## Использование
 
-Главная страница доступна по адресу `http://localhost:3000`. В интерфейсе представлена информация о сервисе и отображается состояние подключения к backend API.
+Главная страница доступна по адресу `http://localhost:3000`. В интерфейсе отображается состояние подключения к backend API. Статистические данные можно получить через REST API.
 
 Проверить ответ API можно из терминала:
 
@@ -37,10 +38,34 @@ curl http://localhost:3001/api/v1/health
 }
 ```
 
+### API статистики
+
+Сервер получает страновую статистику из [Our World in Data](https://github.com/owid/covid-19-data) и сохраняет результат в памяти на один час. При повторных запросах используется кэш; при недоступности источника сервер отдаёт ранее полученные данные. Если данные ещё не загружались и источник недоступен, возвращается `503`.
+
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/api/v1/summary` | Глобальная статистика |
+| GET | `/api/v1/countries` | Список стран с пагинацией |
+| GET | `/api/v1/countries/:code` | Статистика страны по коду ISO alpha-3 |
+| GET | `/api/v1/meta` | Источник и дата данных |
+
+Параметры `/countries`: `search`, `continent`, `sortBy`, `order`, `page`, `limit`. Значение `limit` — от 1 до 100, по умолчанию 20. Доступные значения `sortBy`: `name`, `totalCases`, `totalDeaths`, `newCases`, `newDeaths`, `casesPerMillion`, `deathsPerMillion`.
+
+Примеры запросов:
+
+```bash
+curl http://localhost:3001/api/v1/summary
+curl 'http://localhost:3001/api/v1/countries?search=pol&limit=10'
+curl http://localhost:3001/api/v1/countries/POL
+curl http://localhost:3001/api/v1/meta
+```
+
+Поле `date` обозначает дату исходной статистики, а `fetchedAt` — момент загрузки файла сервером. Отсутствующие числовые значения возвращаются как `null`, а не как ноль. Статистика зависит от дат и полноты публикаций поставщика.
+
 Для обращения к API из JavaScript:
 
 ```js
-fetch('/api/v1/health')
+fetch('/api/v1/summary')
   .then((response) => response.json())
   .then((result) => console.log(result));
 ```
@@ -62,7 +87,7 @@ cd ../server
 npm install
 ```
 
-При необходимости создайте файл `server/.env` на основе `.env.example` и настройте порт и разрешённый адрес клиента. Для локального запуска по умолчанию используются порт `3001` и адрес `http://localhost:3000`.
+При необходимости создайте файл `server/.env` на основе `.env.example` и настройте порт, разрешённый адрес клиента и `COVID_DATA_URL`. Для загрузки статистики серверу требуется исходящее HTTPS-соединение. Для локального запуска по умолчанию используются порт `3001` и адрес `http://localhost:3000`.
 
 ### Запуск Development сервера
 
@@ -103,7 +128,7 @@ npm run build
 
 ## Тестирование
 
-Сервер использует **Jest** для unit-тестов и **Jest + Supertest** для HTTP-проверок:
+Сервер использует **Jest** для unit-тестов парсера и статистического сервиса, а **Jest + Supertest** для HTTP-проверок:
 
 ```bash
 cd covid-tracker/server
@@ -134,7 +159,8 @@ covid-tracker/
 │       └── components/
 ├── server/                  # NestJS API
 │   ├── src/
-│   │   └── health/
+│   │   ├── health/
+│   │   └── statistics/
 │   └── test/
 ├── .editorconfig
 ├── .gitignore
