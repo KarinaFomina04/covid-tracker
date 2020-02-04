@@ -5,7 +5,7 @@ import AsyncState from '../components/AsyncState';
 import CountryTable from '../components/CountryTable';
 import StatisticsCard from '../components/StatisticsCard';
 import { useApiResource } from '../hooks/useApiResource';
-import { formatDate, formatNumber } from '../utils';
+import { formatDate, formatNumber, formatTimestamp } from '../utils';
 
 export default function DashboardPage(): JSX.Element {
   const summary = useApiResource<GlobalStatistics>('/summary');
@@ -91,6 +91,7 @@ export default function DashboardPage(): JSX.Element {
             <div className="insight-divider" />
             <div className="insight-stat"><strong>{metadata.data ? formatNumber(metadata.data.countriesCount) : '—'}</strong><span>countries and territories</span></div>
             <div className="insight-stat"><strong>{formatDate(metadata.data?.dataDate)}</strong><span>latest global observation</span></div>
+            <div className="insight-stat"><strong>{formatTimestamp(metadata.data?.fetchedAt)}</strong><span>last data synchronization</span></div>
             <Link className="primary-link" to="/countries">Browse all countries <span aria-hidden="true">→</span></Link>
           </aside>
         </div>

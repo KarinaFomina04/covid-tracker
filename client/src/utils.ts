@@ -16,3 +16,13 @@ export function formatSigned(value: number | null): string {
   if (value === null) return '—';
   return `${value > 0 ? '+' : ''}${formatNumber(value)}`;
 }
+
+export function formatTimestamp(value: string | null | undefined): string {
+  if (!value) return 'Not available';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return `${new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  }).format(date)} UTC`;
+}

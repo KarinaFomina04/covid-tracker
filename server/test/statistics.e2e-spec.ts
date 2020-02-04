@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { parseOwidCsv } from '../src/statistics/owid-parser';
-import { OwidSourceService } from '../src/statistics/owid-source.service';
+import { DataSyncService } from '../src/statistics/sync/data-sync.service';
 
 const csv = [
   'iso_code,continent,location,last_updated_date,total_cases,new_cases,total_deaths,new_deaths,population',
@@ -19,8 +19,15 @@ describe('COVID-19 Statistics API', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(OwidSourceService)
-      .useValue({ getDataset: jest.fn().mockResolvedValue(dataset) })
+      .overrideProvider(DataSyncService)
+      .useValue({
+        getDataset: jest.fn().mockResolvedValue(dataset),
+        getStatus: jest.fn().mockReturnValue({
+          state: 'ready', hasData: true, fetchedAt: dataset.fetchedAt,
+          dataDate: dataset.world.date,
+          lastAttemptAt: dataset.fetchedAt, lastSuccessAt: dataset.fetchedAt,
+        }),
+      })
       .compile();
 
     app = module.createNestApplication();
@@ -63,6 +70,14 @@ describe('COVID-19 Statistics API', () => {
 
   it('GET /api/v1/countries/:code returns 404 for unknown country', () =>
     request(app.getHttpServer()).get('/api/v1/countries/GBR').expect(404));
+
+  it('GET /api/v1/sync/status reports the last successful update', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/sync/status')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({ state: 'ready', hasData: true });
+      }));
 
   it('GET /api/v1/meta reports the data observation date', () =>
     request(app.getHttpServer())

@@ -33,6 +33,13 @@ describe('parseOwidCsv', () => {
     );
   });
 
+  it('ignores countries with invalid report dates', () => {
+    const csv = CSV.replace('USA,North America,"United States, America",2020-12-30',
+      'USA,North America,"United States, America",2020-13-30');
+    const result = parseOwidCsv(csv, SOURCE_URL, FETCHED_AT);
+    expect(result.countries.map((country) => country.code)).toEqual(['POL']);
+  });
+
   it('rejects data without a world row', () => {
     const csv = CSV.split('\n').filter((line) => !line.startsWith('OWID_WRL')).join('\n');
     expect(() => parseOwidCsv(csv, SOURCE_URL, FETCHED_AT)).toThrow(

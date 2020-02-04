@@ -26,6 +26,12 @@ function optionalNumber(value: string | undefined): number | null {
   return Number.isFinite(number) ? number : null;
 }
 
+function isObservationDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 function ratioPerMillion(value: number | null, population: number | null): number | null {
   if (value === null || population === null || population <= 0) {
     return null;
@@ -70,12 +76,14 @@ export function parseOwidCsv(
   }
 
   const worldRecord = rows.find((row) => row.iso_code === 'OWID_WRL');
-  if (!worldRecord || !worldRecord.last_updated_date) {
+  if (!worldRecord || !isObservationDate(worldRecord.last_updated_date)) {
     throw new Error('World statistics are missing from the source');
   }
 
   const countries = rows
-    .filter((row) => /^[A-Z]{3}$/.test(row.iso_code) && row.location && row.last_updated_date)
+    .filter((row) =>
+      /^[A-Z]{3}$/.test(row.iso_code) && row.location && isObservationDate(row.last_updated_date),
+    )
     .map(toCountry);
 
   if (countries.length === 0) {

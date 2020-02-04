@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { parseOwidCsv } from './owid-parser';
-import { OwidSourceService } from './owid-source.service';
+import { DataSyncService } from './sync/data-sync.service';
 import { StatisticsService } from './statistics.service';
 
 const csv = [
@@ -13,7 +13,7 @@ const csv = [
 const dataset = parseOwidCsv(csv, 'https://example.org/data.csv', '2020-12-31T10:00:00Z');
 const source = {
   getDataset: jest.fn().mockResolvedValue(dataset),
-} as unknown as OwidSourceService;
+} as unknown as DataSyncService;
 
 const statistics = new StatisticsService(source);
 

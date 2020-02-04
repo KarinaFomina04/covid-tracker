@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CountriesQueryDto } from './dto/countries-query.dto';
-import { OwidSourceService } from './owid-source.service';
+import { DataSyncService } from './sync/data-sync.service';
 import { CountryStatistics, CountrySortField } from './statistics.types';
 
 @Injectable()
 export class StatisticsService {
-  constructor(private readonly source: OwidSourceService) {}
+  constructor(private readonly source: DataSyncService) {}
 
   async getSummary() {
     const data = await this.source.getDataset();
