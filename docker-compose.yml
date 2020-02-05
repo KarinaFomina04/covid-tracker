@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: '3001'
+      COVID_DATA_CACHE_FILE: /app/data/owid-statistics.json
+      COVID_SYNC_INTERVAL_MINUTES: '60'
+      COVID_SYNC_RETRY_MINUTES: '5'
+      CLIENT_ORIGIN: http://localhost:8080
+    volumes:
+      - statistics_data:/app/data
+    expose:
+      - '3001'
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - '8080:80'
+    restart: unless-stopped
+
+volumes:
+  statistics_data:

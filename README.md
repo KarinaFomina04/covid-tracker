@@ -29,15 +29,42 @@ COVID-19 Tracker — веб-приложение для просмотра ми�
 
 **Тестирование интерфейса:** Jest и React Testing Library 11.
 
+**Инфраструктура:** Docker, Docker Compose, Nginx 1.19 и GitHub Actions.
+
 ## Использование
 
-После запуска откройте [http://localhost:3000](http://localhost:3000).
+После запуска через Docker Compose откройте [http://localhost:8080](http://localhost:8080). При локальном запуске через npm интерфейс доступен на [http://localhost:3000](http://localhost:3000).
 
 - **Dashboard** (`/`) — мировые показатели, число новых зарегистрированных случаев и смертей, рейтинг стран и таблица с последними доступными данными.
 - **Countries** (`/countries`) — поиск по названию, выбор континента, сортировка и пагинация.
 - **Country details** (`/countries/:code`) — показатели выбранной страны, население и дата отчёта.
 
 В разделе Countries нажмите на название страны, чтобы открыть её подробную страницу. При отсутствии связи с API приложение сообщает об ошибке и позволяет повторить запрос. Числовые значения и даты поступают с сервера; отсутствующие показатели обозначаются символом «—».
+
+### Запуск через Docker Compose
+
+Из корня репозитория выполните:
+
+```bash
+docker-compose up -d --build
+```
+
+Приложение будет доступно на `http://localhost:8080`. Nginx раздаёт статические файлы React и передаёт запросы `/api/` на NestJS во внутренней сети Docker.
+
+Чтобы проверить доступность API, выполните:
+
+```bash
+curl http://localhost:8080/api/v1/health
+```
+
+Для просмотра журналов и остановки контейнеров:
+
+```bash
+docker-compose logs -f
+docker-compose down
+```
+
+Статистика сохраняется в Docker volume `statistics_data` и остаётся доступной после повторного запуска контейнеров. Команда `docker-compose down -v` удаляет этот volume вместе с сохранённой статистикой.
 
 ### API статистики
 
@@ -81,10 +108,19 @@ curl http://localhost:3001/api/v1/sync/status
 
 ### Требования
 
+Для локального запуска:
+
 - Node.js 14.x LTS.
 - npm 6.x.
 - Доступ к npm registry для установки зависимостей.
 - Доступ к источнику CSV для загрузки статистики.
+
+Для контейнерного запуска:
+
+- Docker Engine 19.03 или новее.
+- Docker Compose 1.27 или новее.
+- Доступ к Docker Hub и npm registry для сборки образов.
+- Доступ к источнику CSV со стороны backend-контейнера.
 
 ### Установка зависимостей
 
@@ -164,11 +200,44 @@ npm test
 
 ## Deploy и CI/CD
 
-Для production-сборки выполните `npm run build` в папках `server` и `client`. Запускайте backend командой `npm start` из `server`, а содержимое `client/build` размещайте на веб-сервере (например, Nginx).
+### Docker
 
-В конфигурации веб-сервера необходимо направлять запросы `/api/` на NestJS по порту `3001`. Для корректной работы маршрутов React Router настройте возврат `index.html` при обращении к неизвестным статическим путям. Используйте HTTPS и задайте разрешённые источники CORS через переменные окружения.
+Для сборки и запуска приложения используйте команды из раздела [Запуск через Docker Compose](#запуск-через-docker-compose).
 
-Автоматизированные CI/CD-пайплайны в репозитории не настроены. Сборка и тесты выполняются с помощью npm-скриптов.
+Сервис `web` собирает production-версию React и обслуживает её через Nginx. Сервис `api` запускает NestJS в отдельном контейнере, а папка `/app/data` подключается к именованному Docker volume. Прямое подключение к порту API снаружи контейнерной сети не требуется.
+
+Порт интерфейса задаётся в `docker-compose.yml` (`8080:80`). При размещении приложения на сервере настройте публичный адрес, HTTPS и обратный прокси согласно параметрам окружения.
+
+Переменные `COVID_DATA_CACHE_FILE`, `COVID_SYNC_INTERVAL_MINUTES` и `COVID_SYNC_RETRY_MINUTES` определяются в `docker-compose.yml`. Статистика загружается сервером при старте и обновляется по заданному расписанию.
+
+### Continuous Integration
+
+Конфигурация GitHub Actions находится в `.github/workflows/ci.yml` и выполняется при `push` и `pull_request`.
+
+Пайплайн содержит три задания:
+
+1. **client:** установка зависимостей, тесты React и production-сборка.
+2. **server:** установка зависимостей, unit- и HTTP-тесты NestJS, сборка API.
+3. **docker:** сборка Docker-образов frontend и backend после успешных проверок кода.
+
+Проверки запускаются автоматически после отправки коммитов в GitHub или открытия pull request. Результаты доступны в разделе **Actions** репозитория.
+
+Для локального выполнения соответствующих проверок:
+
+```bash
+cd client
+npm install
+npm test
+npm run build
+
+cd ../server
+npm install
+npm test
+npm run test:e2e
+npm run build
+```
+
+Публикация Docker-образов во внешний registry и автоматический deploy на сервер не настроены: для этого необходимы адрес окружения, доступы и параметры инфраструктуры.
 
 ## Структура проекта
 
@@ -185,6 +254,8 @@ covid-tracker/
 │   │   ├── App.css
 │   │   ├── utils.ts
 │   │   └── index.tsx
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   └── package.json
 ├── server/
 │   ├── src/
@@ -195,7 +266,12 @@ covid-tracker/
 │   │       ├── owid-source.service.ts
 │   │       └── statistics.service.ts
 │   ├── test/
+│   ├── Dockerfile
 │   └── package.json
+├── .github/
+│   └── workflows/
+│       └── ci.yml                  # Проверки GitHub Actions
+├── docker-compose.yml              # Контейнеры API и веб-сервера
 ├── .editorconfig
 ├── .gitignore
 ├── .prettierrc

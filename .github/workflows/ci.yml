@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14.15.3'
+      - name: Install dependencies
+        working-directory: client
+        run: npm install --no-audit --no-fund
+      - name: Test
+        working-directory: client
+        env:
+          CI: 'true'
+        run: npm test
+      - name: Build
+        working-directory: client
+        env:
+          CI: 'true'
+        run: npm run build
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14.15.3'
+      - name: Install dependencies
+        working-directory: server
+        run: npm install --no-audit --no-fund
+      - name: Test
+        working-directory: server
+        run: npm test
+      - name: HTTP tests
+        working-directory: server
+        run: npm run test:e2e
+      - name: Build
+        working-directory: server
+        run: npm run build
+
+  docker:
+    needs: [client, server]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build API image
+        run: docker build -t covid-tracker-api ./server
+      - name: Build web image
+        run: docker build -t covid-tracker-web ./client
