@@ -58,3 +58,23 @@ export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T>
 
   return (await response.json()) as T;
 }
+
+export interface HistoryPoint {
+  date: string;
+  totalCases: number | null;
+  newCases: number | null;
+  totalDeaths: number | null;
+  newDeaths: number | null;
+  newCasesAverage: number | null;
+  newDeathsAverage: number | null;
+}
+
+export interface HistoryResponse {
+  code: string;
+  from: string;
+  to: string;
+  lastObservation: string;
+  source: string;
+  fetchedAt: string;
+  points: HistoryPoint[];
+}

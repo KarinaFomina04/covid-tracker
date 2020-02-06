@@ -3,6 +3,7 @@ import { CountriesResponse, DatasetMetadata, GlobalStatistics } from '../api/sta
 import ApiStatus from '../components/ApiStatus';
 import AsyncState from '../components/AsyncState';
 import CountryTable from '../components/CountryTable';
+import HistoryChart from '../components/charts/HistoryChart';
 import StatisticsCard from '../components/StatisticsCard';
 import { useApiResource } from '../hooks/useApiResource';
 import { formatDate, formatNumber, formatTimestamp } from '../utils';
@@ -55,6 +56,8 @@ export default function DashboardPage(): JSX.Element {
             <StatisticsCard title="Case fatality ratio" value={summary.data.caseFatalityRatio} precision={2} suffix="%" accent="amber" />
           </div>
         )}
+
+        <HistoryChart path="/summary/history" title="Worldwide outbreak trends" population={summary.data?.population || null} />
 
         <div className="dashboard-columns">
           <section className="surface-panel" aria-labelledby="ranking-title">

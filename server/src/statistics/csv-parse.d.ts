@@ -10,3 +10,13 @@ declare module 'csv-parse/lib/sync' {
 
   export = parseCsv;
 }
+
+declare module 'csv-parse' {
+  import { Transform } from 'stream';
+  function parseCsv(options?: {
+    columns?: boolean;
+    bom?: boolean;
+    skip_empty_lines?: boolean;
+  }): Transform;
+  export = parseCsv;
+}

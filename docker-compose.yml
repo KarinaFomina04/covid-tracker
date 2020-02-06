@@ -9,6 +9,7 @@ services:
       NODE_ENV: production
       PORT: '3001'
       COVID_DATA_CACHE_FILE: /app/data/owid-statistics.json
+      COVID_HISTORY_CACHE_FILE: /app/data/owid-history.json.gz
       COVID_SYNC_INTERVAL_MINUTES: '60'
       COVID_SYNC_RETRY_MINUTES: '5'
       CLIENT_ORIGIN: http://localhost:8080

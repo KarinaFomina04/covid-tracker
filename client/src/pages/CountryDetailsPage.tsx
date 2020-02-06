@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { CountryStatistics } from '../api/statistics';
 import AsyncState from '../components/AsyncState';
 import StatisticsCard from '../components/StatisticsCard';
+import HistoryChart from '../components/charts/HistoryChart';
 import { useApiResource } from '../hooks/useApiResource';
 import { formatDate, formatNumber } from '../utils';
 
@@ -31,6 +32,8 @@ export default function CountryDetailsPage(): JSX.Element {
             <StatisticsCard title="Cases per million" value={result.data.casesPerMillion} precision={1} accent="teal" />
             <StatisticsCard title="Deaths per million" value={result.data.deathsPerMillion} precision={1} accent="amber" />
           </div>
+
+          <HistoryChart path={`/countries/${encodeURIComponent(result.data.code)}/history`} title={`${result.data.name}: trends over time`} population={result.data.population} />
 
           <section className="surface-panel country-facts" aria-labelledby="facts-title">
             <div className="panel-heading"><div><p className="eyebrow eyebrow--muted">COUNTRY INFORMATION</p><h2 id="facts-title">Key figures</h2></div></div>

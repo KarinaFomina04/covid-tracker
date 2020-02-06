@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { parseOwidCsv } from '../src/statistics/owid-parser';
 import { DataSyncService } from '../src/statistics/sync/data-sync.service';
+import { HistoryService } from '../src/statistics/history/history.service';
 
 const csv = [
   'iso_code,continent,location,last_updated_date,total_cases,new_cases,total_deaths,new_deaths,population',
@@ -26,6 +27,18 @@ describe('COVID-19 Statistics API', () => {
           state: 'ready', hasData: true, fetchedAt: dataset.fetchedAt,
           dataDate: dataset.world.date,
           lastAttemptAt: dataset.fetchedAt, lastSuccessAt: dataset.fetchedAt,
+        }),
+      })
+      .overrideProvider(HistoryService)
+      .useValue({
+        getHistory: jest.fn().mockImplementation((code: string, query: { period?: string }) => {
+          if (code === 'GBR') return Promise.reject({ status: 404 });
+          return Promise.resolve({
+            code, from: '2020-12-24', to: '2020-12-30', lastObservation: '2020-12-30',
+            source: 'Our World in Data', fetchedAt: dataset.fetchedAt,
+            period: query.period,
+            points: [{ date: '2020-12-30', totalCases: 1000, newCases: 20, totalDeaths: 50, newDeaths: 1, newCasesAverage: 15, newDeathsAverage: 1 }],
+          });
         }),
       })
       .compile();
@@ -70,6 +83,20 @@ describe('COVID-19 Statistics API', () => {
 
   it('GET /api/v1/countries/:code returns 404 for unknown country', () =>
     request(app.getHttpServer()).get('/api/v1/countries/GBR').expect(404));
+
+  it('GET /api/v1/summary/history returns world time series', () =>
+    request(app.getHttpServer()).get('/api/v1/summary/history?period=7d').expect(200)
+      .expect(({ body }) => {
+        expect(body.code).toBe('OWID_WRL');
+        expect(body.points).toHaveLength(1);
+      }));
+
+  it('GET /api/v1/countries/:code/history returns country time series', () =>
+    request(app.getHttpServer()).get('/api/v1/countries/POL/history?period=30d').expect(200)
+      .expect(({ body }) => { expect(body.code).toBe('POL'); }));
+
+  it('GET /api/v1/countries/:code/history rejects invalid periods', () =>
+    request(app.getHttpServer()).get('/api/v1/countries/POL/history?period=100d').expect(400));
 
   it('GET /api/v1/sync/status reports the last successful update', () =>
     request(app.getHttpServer())
