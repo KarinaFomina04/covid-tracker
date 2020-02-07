@@ -78,3 +78,9 @@ export interface HistoryResponse {
   fetchedAt: string;
   points: HistoryPoint[];
 }
+
+export interface MapResponse {
+  date: string;
+  source: string;
+  items: CountryStatistics[];
+}

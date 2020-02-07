@@ -40,6 +40,12 @@ describe('StatisticsService', () => {
     expect(result.items.map((item) => item.code)).toEqual(['POL']);
   });
 
+  it('returns all countries for the world map without pagination', async () => {
+    const result = await statistics.getMap();
+    expect(result.date).toBe('2020-12-30');
+    expect(result.items.map((country) => country.code)).toEqual(['USA', 'POL']);
+  });
+
   it('looks up country codes without case sensitivity', async () => {
     expect((await statistics.getCountry('usa')).name).toBe('United States');
   });

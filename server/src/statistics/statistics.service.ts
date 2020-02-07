@@ -62,6 +62,15 @@ export class StatisticsService {
     };
   }
 
+  async getMap() {
+    const data = await this.source.getDataset();
+    return {
+      date: data.world.date,
+      source: 'Our World in Data',
+      items: data.countries,
+    };
+  }
+
   async getCountry(code: string): Promise<CountryStatistics> {
     const normalizedCode = code.toUpperCase();
     if (!/^[A-Z]{3}$/.test(normalizedCode)) {

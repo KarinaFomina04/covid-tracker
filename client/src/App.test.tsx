@@ -22,6 +22,9 @@ beforeEach(() => {
   window.fetch = jest.fn().mockImplementation((path: string) => {
     let data: unknown = { status: 'ok', service: 'covid-tracker-api' };
     if (path.includes('/summary')) data = world;
+    if (path.includes('/map')) {
+      data = { date: '2020-12-10', source: 'Our World in Data', items: [] };
+    }
     if (path.includes('/countries?')) {
       data = { items: [], total: 0, page: 1, limit: 6, totalPages: 0, source: 'Our World in Data' };
     }

@@ -61,6 +61,16 @@ describe('COVID-19 Statistics API', () => {
         expect(body).toMatchObject({ code: 'OWID_WRL', totalCases: 1000 });
       }));
 
+  it('GET /api/v1/map returns all available country observations', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/map')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.date).toBe('2020-12-30');
+        expect(body.items).toHaveLength(2);
+        expect(body.items.map((country: { code: string }) => country.code)).toEqual(['USA', 'POL']);
+      }));
+
   it('GET /api/v1/countries supports search and pagination', () =>
     request(app.getHttpServer())
       .get('/api/v1/countries?search=pol&limit=1')

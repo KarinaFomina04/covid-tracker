@@ -5,6 +5,7 @@ import AsyncState from '../components/AsyncState';
 import CountryTable from '../components/CountryTable';
 import HistoryChart from '../components/charts/HistoryChart';
 import StatisticsCard from '../components/StatisticsCard';
+import WorldMapPanel from '../components/map/WorldMapPanel';
 import { useApiResource } from '../hooks/useApiResource';
 import { formatDate, formatNumber, formatTimestamp } from '../utils';
 
@@ -58,6 +59,8 @@ export default function DashboardPage(): JSX.Element {
         )}
 
         <HistoryChart path="/summary/history" title="Worldwide outbreak trends" population={summary.data?.population || null} />
+
+        <WorldMapPanel />
 
         <div className="dashboard-columns">
           <section className="surface-panel" aria-labelledby="ranking-title">

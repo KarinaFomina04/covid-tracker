@@ -3,6 +3,7 @@ import CountriesPage from './pages/CountriesPage';
 import CountryDetailsPage from './pages/CountryDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
+import WorldMapPage from './pages/WorldMapPage';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -18,6 +19,7 @@ export default function App(): JSX.Element {
             <nav className="site-nav" aria-label="Main navigation">
               <NavLink exact to="/" activeClassName="site-nav__link--active" className="site-nav__link">Dashboard</NavLink>
               <NavLink to="/countries" activeClassName="site-nav__link--active" className="site-nav__link">Countries</NavLink>
+              <NavLink to="/map" activeClassName="site-nav__link--active" className="site-nav__link">World map</NavLink>
             </nav>
           </div>
         </header>
@@ -25,6 +27,7 @@ export default function App(): JSX.Element {
         <Switch>
           <Route exact path="/" component={DashboardPage} />
           <Route exact path="/countries" component={CountriesPage} />
+          <Route exact path="/map" component={WorldMapPage} />
           <Route exact path="/countries/:code" component={CountryDetailsPage} />
           <Route component={NotFoundPage} />
         </Switch>

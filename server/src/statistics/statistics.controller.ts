@@ -20,6 +20,11 @@ export class StatisticsController {
     return this.history.getHistory('OWID_WRL', query);
   }
 
+  @Get('map')
+  getMap() {
+    return this.statistics.getMap();
+  }
+
   @Get('meta')
   getMetadata() {
     return this.statistics.getMetadata();
