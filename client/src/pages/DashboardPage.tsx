@@ -98,7 +98,7 @@ export default function DashboardPage(): JSX.Element {
             <div className="insight-stat"><strong>{metadata.data ? formatNumber(metadata.data.countriesCount) : '—'}</strong><span>countries and territories</span></div>
             <div className="insight-stat"><strong>{formatDate(metadata.data?.dataDate)}</strong><span>latest global observation</span></div>
             <div className="insight-stat"><strong>{formatTimestamp(metadata.data?.fetchedAt)}</strong><span>last data synchronization</span></div>
-            <Link className="primary-link" to="/countries">Browse all countries <span aria-hidden="true">→</span></Link>
+            <Link className="primary-link" to="/compare">Compare countries <span aria-hidden="true">→</span></Link>
           </aside>
         </div>
 

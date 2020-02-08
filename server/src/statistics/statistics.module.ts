@@ -9,6 +9,7 @@ import { SyncController } from './sync/sync.controller';
 import { HistoryService } from './history/history.service';
 import { HistorySourceService } from './history/history-source.service';
 import { HistoryStoreService } from './history/history-store.service';
+import { CompareService } from './compare/compare.service';
 
 @Module({
   controllers: [StatisticsController, CountriesController, SyncController],
@@ -20,6 +21,7 @@ import { HistoryStoreService } from './history/history-store.service';
     HistoryService,
     HistorySourceService,
     HistoryStoreService,
+    CompareService,
   ],
 })
 export class StatisticsModule {}

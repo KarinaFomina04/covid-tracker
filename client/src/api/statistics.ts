@@ -84,3 +84,33 @@ export interface MapResponse {
   source: string;
   items: CountryStatistics[];
 }
+
+export type ComparisonMetric =
+  | 'totalCases'
+  | 'newCases'
+  | 'newCasesAverage'
+  | 'totalDeaths'
+  | 'newDeaths'
+  | 'newDeathsAverage';
+export type ComparisonScale = 'absolute' | 'perMillion';
+
+export interface ComparisonCountry {
+  code: string;
+  name: string;
+  population: number | null;
+  values: Array<number | null>;
+  lastValue: number | null;
+  lastValueDate: string | null;
+}
+
+export interface ComparisonResponse {
+  from: string;
+  to: string;
+  lastObservation: string;
+  dates: string[];
+  metric: ComparisonMetric;
+  scale: ComparisonScale;
+  countries: ComparisonCountry[];
+  source: string;
+  fetchedAt: string;
+}

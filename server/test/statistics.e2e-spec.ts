@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { parseOwidCsv } from '../src/statistics/owid-parser';
 import { DataSyncService } from '../src/statistics/sync/data-sync.service';
 import { HistoryService } from '../src/statistics/history/history.service';
+import { CompareService } from '../src/statistics/compare/compare.service';
 
 const csv = [
   'iso_code,continent,location,last_updated_date,total_cases,new_cases,total_deaths,new_deaths,population',
@@ -29,6 +30,11 @@ describe('COVID-19 Statistics API', () => {
           lastAttemptAt: dataset.fetchedAt, lastSuccessAt: dataset.fetchedAt,
         }),
       })
+      .overrideProvider(CompareService)
+      .useValue({ getComparison: jest.fn().mockImplementation((query: { codes: string }) => {
+        if (query.codes === 'POL,USA') return Promise.resolve({ dates: ['2020-12-30'], countries: [{ code: 'POL' }, { code: 'USA' }] });
+        return Promise.reject({ status: 400 });
+      }) })
       .overrideProvider(HistoryService)
       .useValue({
         getHistory: jest.fn().mockImplementation((code: string, query: { period?: string }) => {
@@ -93,6 +99,19 @@ describe('COVID-19 Statistics API', () => {
 
   it('GET /api/v1/countries/:code returns 404 for unknown country', () =>
     request(app.getHttpServer()).get('/api/v1/countries/GBR').expect(404));
+
+  it('GET /api/v1/compare returns matching country series', () =>
+    request(app.getHttpServer()).get('/api/v1/compare?codes=POL,USA&metric=newCases&period=30d').expect(200)
+      .expect(({ body }) => { expect(body.countries).toHaveLength(2); }));
+
+  it('GET /api/v1/compare requires country codes', () =>
+    request(app.getHttpServer()).get('/api/v1/compare').expect(400));
+
+  it('GET /api/v1/compare rejects invalid dates', () =>
+    request(app.getHttpServer()).get('/api/v1/compare?codes=POL,USA&from=invalid').expect(400));
+
+  it('GET /api/v1/compare rejects unsupported metrics', () =>
+    request(app.getHttpServer()).get('/api/v1/compare?codes=POL,USA&metric=unknown').expect(400));
 
   it('GET /api/v1/summary/history returns world time series', () =>
     request(app.getHttpServer()).get('/api/v1/summary/history?period=7d').expect(200)
