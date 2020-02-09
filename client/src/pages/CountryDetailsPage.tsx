@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { CountryStatistics } from '../api/statistics';
 import AsyncState from '../components/AsyncState';
+import FavoriteButton from '../components/FavoriteButton';
 import StatisticsCard from '../components/StatisticsCard';
 import HistoryChart from '../components/charts/HistoryChart';
 import { useApiResource } from '../hooks/useApiResource';
@@ -23,7 +24,10 @@ export default function CountryDetailsPage(): JSX.Element {
               <h1>{result.data.name}</h1>
               <p>{result.data.continent || 'Continent unavailable'} · Statistics reported on {formatDate(result.data.date)}</p>
             </div>
-            <span className="country-header__code">{result.data.code}</span>
+            <div className="country-header__actions">
+              <FavoriteButton code={result.data.code} name={result.data.name} />
+              <span className="country-header__code">{result.data.code}</span>
+            </div>
           </header>
 
           <div className="stats-grid">

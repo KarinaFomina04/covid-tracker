@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CountryStatistics } from '../api/statistics';
+import FavoriteButton from './FavoriteButton';
 import { formatDate, formatNumber, formatSigned } from '../utils';
 
 interface CountryTableProps {
@@ -22,6 +23,7 @@ export default function CountryTable({ countries }: CountryTableProps): JSX.Elem
             <th scope="col" className="numeric">Total deaths</th>
             <th scope="col" className="numeric">Cases / 1M</th>
             <th scope="col">Report date</th>
+            <th scope="col">Favorite</th>
           </tr>
         </thead>
         <tbody>
@@ -38,6 +40,7 @@ export default function CountryTable({ countries }: CountryTableProps): JSX.Elem
               <td className="numeric">{formatNumber(country.totalDeaths)}</td>
               <td className="numeric">{formatNumber(country.casesPerMillion, 1)}</td>
               <td className="date-cell">{formatDate(country.date)}</td>
+              <td><FavoriteButton code={country.code} name={country.name} compact /></td>
             </tr>
           ))}
         </tbody>

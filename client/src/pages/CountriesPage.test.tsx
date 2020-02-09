@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import CountriesPage from './CountriesPage';
+import { FavoritesProvider } from '../context/FavoritesContext';
 
 const countriesResponse = {
   items: [{
@@ -16,18 +17,28 @@ beforeEach(() => {
 });
 
 test('shows country data and opens its details', async () => {
-  render(<MemoryRouter><CountriesPage /></MemoryRouter>);
+  render(<MemoryRouter><FavoritesProvider><CountriesPage /></FavoritesProvider></MemoryRouter>);
   const countryLink = await screen.findByRole('link', { name: 'Poland' });
   expect(countryLink).toHaveAttribute('href', '/countries/POL');
   expect(screen.getByText('1,000,000')).toBeInTheDocument();
 });
 
 test('updates continent filter', async () => {
-  render(<MemoryRouter><CountriesPage /></MemoryRouter>);
+  render(<MemoryRouter><FavoritesProvider><CountriesPage /></FavoritesProvider></MemoryRouter>);
   await screen.findByText('Poland');
   fireEvent.change(screen.getByLabelText('Continent'), { target: { value: 'Europe' } });
   expect(window.fetch).toHaveBeenCalledWith(
     expect.stringContaining('continent=Europe'),
     expect.any(Object),
   );
+});
+
+test('adds a country to favorites from the table', async () => {
+  window.localStorage.clear();
+  render(<MemoryRouter><FavoritesProvider><CountriesPage /></FavoritesProvider></MemoryRouter>);
+  await screen.findByText('Poland');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Add Poland to favorites' }));
+  expect(screen.getByRole('button', { name: 'Remove Poland from favorites' })).toHaveAttribute('aria-pressed', 'true');
+  expect(JSON.parse(window.localStorage.getItem('covid-tracker:favorites') || '[]')).toEqual(['POL']);
 });
