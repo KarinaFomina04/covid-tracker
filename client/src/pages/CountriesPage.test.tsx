@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import CountriesPage from './CountriesPage';
 import { FavoritesProvider } from '../context/FavoritesContext';
+import * as csvExport from '../utils/csv-export';
 
 const countriesResponse = {
   items: [{
@@ -41,4 +42,21 @@ test('adds a country to favorites from the table', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Add Poland to favorites' }));
   expect(screen.getByRole('button', { name: 'Remove Poland from favorites' })).toHaveAttribute('aria-pressed', 'true');
   expect(JSON.parse(window.localStorage.getItem('covid-tracker:favorites') || '[]')).toEqual(['POL']);
+});
+
+test('downloads the current filtered table page as CSV', async () => {
+  const download = jest.spyOn(csvExport, 'downloadCsv').mockImplementation(() => undefined);
+  try {
+    render(<MemoryRouter><FavoritesProvider><CountriesPage /></FavoritesProvider></MemoryRouter>);
+    const button = screen.getByRole('button', { name: 'Export current page CSV' });
+    expect(button).toBeDisabled();
+    await screen.findByText('Poland');
+    fireEvent.click(button);
+    expect(download).toHaveBeenCalledWith(
+      'covid-19-countries-page-1.csv',
+      expect.stringContaining('Poland,POL,Europe,2020-12-10'),
+    );
+  } finally {
+    download.mockRestore();
+  }
 });

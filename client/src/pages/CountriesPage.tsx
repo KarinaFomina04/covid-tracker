@@ -3,6 +3,7 @@ import { CountriesResponse, CountrySort } from '../api/statistics';
 import AsyncState from '../components/AsyncState';
 import CountryTable from '../components/CountryTable';
 import { useApiResource } from '../hooks/useApiResource';
+import { countriesToCsv, downloadCsv } from '../utils/csv-export';
 
 const continents = ['Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'];
 const PAGE_SIZE = 12;
@@ -30,6 +31,11 @@ export default function CountriesPage(): JSX.Element {
   const handleContinent = (event: ChangeEvent<HTMLSelectElement>) => {
     setContinent(event.target.value);
     setPage(1);
+  };
+  const handleExport = () => {
+    if (!response.data || response.loading) return;
+    const csv = countriesToCsv(response.data.items);
+    downloadCsv(`covid-19-countries-page-${response.data.page}.csv`, csv);
   };
   const handleSort = (event: ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value as CountrySort;
@@ -83,7 +89,17 @@ export default function CountriesPage(): JSX.Element {
 
         <div className="results-heading">
           <p>{response.data ? `${response.data.total} results` : 'Country statistics'}</p>
-          <span>Figures reflect their respective reporting dates</span>
+          <div className="results-heading__actions">
+            <span>Figures reflect their respective reporting dates</span>
+            <button
+              className="export-button"
+              type="button"
+              disabled={!response.data || response.loading || response.data.items.length === 0}
+              onClick={handleExport}
+            >
+              Export current page CSV
+            </button>
+          </div>
         </div>
         {response.loading && <AsyncState />}
         {response.error && <AsyncState error={response.error} retry={response.retry} />}

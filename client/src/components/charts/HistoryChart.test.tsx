@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import HistoryChart from './HistoryChart';
+import * as csvExport from '../../utils/csv-export';
 
 jest.mock('chart.js', () => jest.fn().mockImplementation(() => ({ destroy: jest.fn() })));
 
@@ -22,4 +23,27 @@ test('loads historical observations and changes the selected period', async () =
   await waitFor(() => {
     expect(window.fetch).toHaveBeenCalledWith('/api/v1/countries/POL/history?period=90d', expect.any(Object));
   });
+});
+
+test('downloads the displayed metric and period as CSV', async () => {
+  const download = jest.spyOn(csvExport, 'downloadCsv').mockImplementation(() => undefined);
+  try {
+    render(<HistoryChart path="/countries/POL/history" title="Poland: trends" population={38000000} />);
+    const button = screen.getByRole('button', { name: 'Download CSV' });
+    expect(button).toBeDisabled();
+    await screen.findByRole('img', { name: /total confirmed cases/i });
+    fireEvent.click(button);
+    expect(download).toHaveBeenCalledWith(
+      'covid-19-pol-cases-total-absolute-30d.csv',
+      expect.stringContaining('2020-12-31,100'),
+    );
+    fireEvent.change(screen.getByLabelText('Chart series'), { target: { value: 'daily' } });
+    fireEvent.click(button);
+    expect(download).toHaveBeenLastCalledWith(
+      'covid-19-pol-cases-7-day-average-absolute-30d.csv',
+      expect.stringContaining('2020-12-31,4'),
+    );
+  } finally {
+    download.mockRestore();
+  }
 });

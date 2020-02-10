@@ -3,6 +3,7 @@ import Chart from 'chart.js';
 import { HistoryResponse } from '../../api/statistics';
 import { useApiResource } from '../../hooks/useApiResource';
 import { formatDate } from '../../utils';
+import { downloadCsv, historyToCsv } from '../../utils/csv-export';
 import AsyncState from '../AsyncState';
 import { buildChartSeries, ChartMetric, ChartMode } from './chart-series';
 
@@ -36,6 +37,14 @@ export default function HistoryChart({ path, title, population }: HistoryChartPr
     ),
     [result.data, metric, mode, perMillion, average, population],
   );
+
+  const handleExport = () => {
+    if (!result.data || result.loading || !series.hasValues) return;
+    const code = result.data.code.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    const format = mode === 'daily' && average ? '7-day-average' : mode;
+    const scale = perMillion ? 'per-million' : 'absolute';
+    downloadCsv(`covid-19-${code}-${metric}-${format}-${scale}-${period}.csv`, historyToCsv(series));
+  };
 
   useEffect(() => {
     if (!canvas.current || !series.hasValues) return;
@@ -81,7 +90,17 @@ export default function HistoryChart({ path, title, population }: HistoryChartPr
           <p className="eyebrow eyebrow--muted">HISTORICAL TRENDS</p>
           <h2>{title}</h2>
         </div>
-        <span className="history-caption">Our World in Data</span>
+        <div className="panel-heading__actions">
+          <span className="history-caption">Our World in Data</span>
+          <button
+            type="button"
+            className="export-button"
+            disabled={!result.data || result.loading || !series.hasValues}
+            onClick={handleExport}
+          >
+            Download CSV
+          </button>
+        </div>
       </div>
       <div className="history-controls">
         <label className="field">
