@@ -3,6 +3,7 @@ import { CountryStatistics } from '../api/statistics';
 import AsyncState from '../components/AsyncState';
 import FavoriteButton from '../components/FavoriteButton';
 import StatisticsCard from '../components/StatisticsCard';
+import TestingPanel from '../components/TestingPanel';
 import HistoryChart from '../components/charts/HistoryChart';
 import { useApiResource } from '../hooks/useApiResource';
 import { formatDate, formatNumber } from '../utils';
@@ -36,6 +37,8 @@ export default function CountryDetailsPage(): JSX.Element {
             <StatisticsCard title="Cases per million" value={result.data.casesPerMillion} precision={1} accent="teal" />
             <StatisticsCard title="Deaths per million" value={result.data.deathsPerMillion} precision={1} accent="amber" />
           </div>
+
+          <TestingPanel country={result.data} />
 
           <HistoryChart path={`/countries/${encodeURIComponent(result.data.code)}/history`} title={`${result.data.name}: trends over time`} population={result.data.population} />
 

@@ -211,3 +211,9 @@ h2 { font-size: 24px; font-weight: 700; line-height: 1.3; letter-spacing: -.65px
 .export-button:focus-visible { outline: 2px solid #0b849c; outline-offset: 2px; }
 .export-button:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 500px) { .results-heading__actions, .panel-heading__actions { align-items: flex-start; flex-direction: column; } }
+
+/* Testing overview */
+.testing-panel { margin-top: 24px; }
+.testing-grid { margin: 14px 0 0; }
+.testing-panel__empty { margin: 10px 0 0; color: #607986; }
+.testing-panel__note { margin: 18px 0 0; color: #708695; font-size: 12px; line-height: 1.6; }

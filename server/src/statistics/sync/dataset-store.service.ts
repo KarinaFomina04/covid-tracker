@@ -18,6 +18,7 @@ function isCountry(value: unknown): value is CountryStatistics {
     'population', 'totalCases', 'newCases', 'totalDeaths', 'newDeaths',
     'casesPerMillion', 'deathsPerMillion',
   ];
+  const optionalNumericFields = ['totalTests', 'newTests', 'testsPerThousand', 'positiveRate'];
   return (
     typeof value.code === 'string' &&
     typeof value.name === 'string' &&
@@ -27,7 +28,14 @@ function isCountry(value: unknown): value is CountryStatistics {
     numericFields.every((key) => {
       const number = value[key];
       return number === null || (typeof number === 'number' && Number.isFinite(number));
-    })
+    }) &&
+    optionalNumericFields.every((key) => {
+      const number = value[key];
+      return number === undefined || number === null ||
+        (typeof number === 'number' && Number.isFinite(number));
+    }) &&
+    (value.positiveRate === undefined || value.positiveRate === null ||
+      (typeof value.positiveRate === 'number' && value.positiveRate >= 0 && value.positiveRate <= 1))
   );
 }
 

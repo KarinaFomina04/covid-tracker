@@ -10,6 +10,10 @@ export interface CountryStatistics {
   newDeaths: number | null;
   casesPerMillion: number | null;
   deathsPerMillion: number | null;
+  totalTests?: number | null;
+  newTests?: number | null;
+  testsPerThousand?: number | null;
+  positiveRate?: number | null;
 }
 
 export interface StatisticsDataset {

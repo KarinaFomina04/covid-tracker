@@ -40,10 +40,21 @@ function ratioPerMillion(value: number | null, population: number | null): numbe
   return Math.round((value / population) * 1000000 * 100) / 100;
 }
 
+function positiveRate(value: string | undefined): number | null {
+  const rate = optionalNumber(value);
+  return rate !== null && rate >= 0 && rate <= 1 ? rate : null;
+}
+
+function ratioPerThousand(value: number | null, population: number | null): number | null {
+  if (value === null || population === null || population <= 0) return null;
+  return Math.round((value / population) * 1000 * 100) / 100;
+}
+
 function toCountry(row: CsvRecord): CountryStatistics {
   const population = optionalNumber(row.population);
   const totalCases = optionalNumber(row.total_cases);
   const totalDeaths = optionalNumber(row.total_deaths);
+  const totalTests = optionalNumber(row.total_tests);
 
   return {
     code: row.iso_code.trim(),
@@ -57,6 +68,10 @@ function toCountry(row: CsvRecord): CountryStatistics {
     newDeaths: optionalNumber(row.new_deaths),
     casesPerMillion: ratioPerMillion(totalCases, population),
     deathsPerMillion: ratioPerMillion(totalDeaths, population),
+    totalTests,
+    newTests: optionalNumber(row.new_tests),
+    testsPerThousand: ratioPerThousand(totalTests, population),
+    positiveRate: positiveRate(row.positive_rate),
   };
 }
 

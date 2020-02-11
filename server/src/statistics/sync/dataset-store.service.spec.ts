@@ -40,6 +40,31 @@ describe('DatasetStoreService', () => {
     expect(await fs.readdir(join(directory, 'data'))).toEqual(['dataset.json']);
   });
 
+  it('loads saved statistics without testing fields from an earlier snapshot', async () => {
+    const store = new DatasetStoreService();
+    const previous = JSON.parse(JSON.stringify(dataset));
+    for (const country of [previous.world, ...previous.countries]) {
+      delete country.totalTests;
+      delete country.newTests;
+      delete country.testsPerThousand;
+      delete country.positiveRate;
+    }
+    await fs.mkdir(join(directory, 'data'));
+    await fs.writeFile(join(directory, 'data', 'dataset.json'),
+      JSON.stringify({ version: 1, dataset: previous }));
+    expect((await store.load())?.countries[0].totalTests).toBeUndefined();
+  });
+
+  it('rejects an invalid testing value in saved statistics', async () => {
+    const store = new DatasetStoreService();
+    const invalid = JSON.parse(JSON.stringify(dataset));
+    invalid.countries[0].positiveRate = 1.5;
+    await fs.mkdir(join(directory, 'data'));
+    await fs.writeFile(join(directory, 'data', 'dataset.json'),
+      JSON.stringify({ version: 1, dataset: invalid }));
+    await expect(store.load()).rejects.toThrow('unexpected format');
+  });
+
   it('rejects invalid or incomplete snapshots', async () => {
     const store = new DatasetStoreService();
     await fs.mkdir(join(directory, 'data'));

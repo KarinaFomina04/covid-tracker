@@ -8,10 +8,10 @@ import { HistoryService } from '../src/statistics/history/history.service';
 import { CompareService } from '../src/statistics/compare/compare.service';
 
 const csv = [
-  'iso_code,continent,location,last_updated_date,total_cases,new_cases,total_deaths,new_deaths,population',
-  'OWID_WRL,,World,2020-12-30,1000,20,50,1,10000',
-  'USA,North America,United States,2020-12-30,600,10,30,1,1000',
-  'POL,Europe,Poland,2020-12-30,200,5,10,0,500',
+  'iso_code,continent,location,last_updated_date,total_cases,new_cases,total_deaths,new_deaths,population,total_tests,new_tests,positive_rate',
+  'OWID_WRL,,World,2020-12-30,1000,20,50,1,10000,2500,100,0.04',
+  'USA,North America,United States,2020-12-30,600,10,30,1,1000,3000,20,0.1',
+  'POL,Europe,Poland,2020-12-30,200,5,10,0,500,,,',
 ].join('\n');
 
 const dataset = parseOwidCsv(csv, 'https://example.org/data.csv', '2020-12-31T10:00:00Z');
@@ -94,7 +94,18 @@ describe('COVID-19 Statistics API', () => {
       .get('/api/v1/countries/USA')
       .expect(200)
       .expect(({ body }) => {
-        expect(body.name).toBe('United States');
+        expect(body).toMatchObject({
+          name: 'United States',
+          totalTests: 3000, newTests: 20, testsPerThousand: 3000, positiveRate: 0.1,
+        });
+      }));
+
+  it('GET /api/v1/countries/:code leaves unavailable testing metrics empty', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries/POL')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({ totalTests: null, newTests: null, positiveRate: null });
       }));
 
   it('GET /api/v1/countries/:code returns 404 for unknown country', () =>

@@ -10,6 +10,7 @@ beforeEach(() => {
       code: 'POL', name: 'Poland', continent: 'Europe', date: '2020-12-10',
       population: 38000000, totalCases: 1000000, newCases: 8000,
       totalDeaths: 20000, newDeaths: 100, casesPerMillion: 26315.8, deathsPerMillion: 526.3,
+      totalTests: 4000000, newTests: 20000, testsPerThousand: 105.26, positiveRate: 0.075,
     }),
   });
 });
@@ -22,6 +23,8 @@ test('shows the selected country profile', async () => {
   );
   expect(await screen.findByRole('heading', { level: 1, name: 'Poland' })).toBeInTheDocument();
   expect(screen.getByText('38,000,000')).toBeInTheDocument();
+  expect(screen.getByText('4,000,000')).toBeInTheDocument();
+  expect(screen.getByText('7.5%')).toBeInTheDocument();
   expect(window.fetch).toHaveBeenCalledWith('/api/v1/countries/POL', expect.any(Object));
 });
 
