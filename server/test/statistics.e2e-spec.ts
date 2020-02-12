@@ -1,7 +1,8 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ServiceUnavailableException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 import { parseOwidCsv } from '../src/statistics/owid-parser';
 import { DataSyncService } from '../src/statistics/sync/data-sync.service';
 import { HistoryService } from '../src/statistics/history/history.service';
@@ -18,12 +19,13 @@ const dataset = parseOwidCsv(csv, 'https://example.org/data.csv', '2020-12-31T10
 
 describe('COVID-19 Statistics API', () => {
   let app: INestApplication;
+  const getDataset = jest.fn().mockResolvedValue(dataset);
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DataSyncService)
       .useValue({
-        getDataset: jest.fn().mockResolvedValue(dataset),
+        getDataset,
         getStatus: jest.fn().mockReturnValue({
           state: 'ready', hasData: true, fetchedAt: dataset.fetchedAt,
           dataDate: dataset.world.date,
@@ -50,8 +52,7 @@ describe('COVID-19 Statistics API', () => {
       .compile();
 
     app = module.createNestApplication();
-    app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+    configureApp(app);
     await app.init();
   });
 
@@ -88,6 +89,37 @@ describe('COVID-19 Statistics API', () => {
 
   it('GET /api/v1/countries rejects invalid pagination', () =>
     request(app.getHttpServer()).get('/api/v1/countries?limit=101').expect(400));
+
+  it('GET /api/v1/countries returns a consistent validation error', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries?limit=0')
+      .expect(400)
+      .expect(({ body }) => {
+        expect(body.statusCode).toBe(400);
+        expect(body.message).toEqual(expect.arrayContaining([expect.stringContaining('limit')]));
+        expect(body.path).toBe('/api/v1/countries?limit=0');
+      }));
+
+  it('GET /api/v1/summary returns 503 when the source is unavailable', async () => {
+    getDataset.mockRejectedValueOnce(new ServiceUnavailableException('Statistics unavailable'));
+    await request(app.getHttpServer())
+      .get('/api/v1/summary')
+      .expect(503)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({ statusCode: 503, message: 'Statistics unavailable' });
+      });
+  });
+
+  it('GET /api/v1/summary hides unexpected server errors', async () => {
+    getDataset.mockRejectedValueOnce(new Error('Private implementation detail'));
+    await request(app.getHttpServer())
+      .get('/api/v1/summary')
+      .expect(500)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({ statusCode: 500, message: 'Internal server error' });
+        expect(JSON.stringify(body)).not.toContain('Private implementation detail');
+      });
+  });
 
   it('GET /api/v1/countries/:code', () =>
     request(app.getHttpServer())

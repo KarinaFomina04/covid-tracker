@@ -7,6 +7,7 @@ import CountryDetailsPage from './pages/CountryDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
 import WorldMapPage from './pages/WorldMapPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 function AppLayout(): JSX.Element {
@@ -52,5 +53,5 @@ function AppLayout(): JSX.Element {
 }
 
 export default function App(): JSX.Element {
-  return <FavoritesProvider><AppLayout /></FavoritesProvider>;
+  return <ErrorBoundary><FavoritesProvider><AppLayout /></FavoritesProvider></ErrorBoundary>;
 }

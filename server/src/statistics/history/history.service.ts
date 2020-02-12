@@ -82,8 +82,12 @@ export class HistoryService {
     if (this.pending) return this.pending;
     this.lastAttemptAt = Date.now();
     const operation = this.source.fetchDataset().then(async (data) => {
-      await this.store.save(data);
       this.dataset = data;
+      try {
+        await this.store.save(data);
+      } catch (error) {
+        this.logger.warn('Historical statistics updated but could not be saved to disk');
+      }
       this.logger.log('Historical statistics synchronized');
       return data;
     });

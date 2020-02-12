@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 
 describe('Health API', () => {
   let app: INestApplication;
@@ -9,7 +10,7 @@ describe('Health API', () => {
   beforeAll(async () => {
     const testingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = testingModule.createNestApplication();
-    app.setGlobalPrefix('api/v1');
+    configureApp(app);
     await app.init();
   });
 

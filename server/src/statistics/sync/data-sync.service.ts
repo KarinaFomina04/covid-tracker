@@ -116,9 +116,13 @@ export class DataSyncService implements OnModuleInit, OnModuleDestroy {
     this.lastAttemptAt = new Date().toISOString();
     try {
       const updated = await this.source.fetchDataset();
-      await this.store.save(updated);
       this.dataset = updated;
       this.lastSuccessAt = updated.fetchedAt;
+      try {
+        await this.store.save(updated);
+      } catch (error) {
+        this.logger.warn('Statistics updated but could not be saved to disk');
+      }
       this.failed = false;
       this.nextRetryAt = 0;
       if (this.retryTimer) clearTimeout(this.retryTimer);

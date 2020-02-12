@@ -41,6 +41,13 @@ describe('DataSyncService', () => {
     });
   });
 
+  it('serves new observations even if writing the cache fails', async () => {
+    save.mockRejectedValueOnce(new Error('Disk is read-only'));
+    await expect(service.synchronize()).resolves.toEqual(dataset);
+    expect(await service.getDataset()).toEqual(dataset);
+    expect(service.getStatus()).toMatchObject({ state: 'ready', hasData: true });
+  });
+
   it('shares a single download between concurrent requests', async () => {
     let complete!: (value: typeof dataset) => void;
     const request = new Promise<typeof dataset>((resolve) => { complete = resolve; });

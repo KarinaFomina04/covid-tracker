@@ -47,20 +47,68 @@ export type CountrySort =
   | 'casesPerMillion'
   | 'deathsPerMillion';
 
-export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/v1${path}`, { signal });
+export class ApiRequestError extends Error {
+  constructor(message: string, public readonly status: number | null = null) {
+    super(message);
+    this.name = 'ApiRequestError';
+    Object.setPrototypeOf(this, ApiRequestError.prototype);
+  }
+}
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error('The requested country could not be found.');
-    }
-    if (response.status === 503) {
-      throw new Error('Statistics are currently unavailable. Please try again later.');
-    }
-    throw new Error('Unable to load statistics. Please try again.');
+const REQUEST_TIMEOUT_MS = 20000;
+const HISTORY_TIMEOUT_MS = 180000;
+
+function messageForStatus(status: number): string {
+  if (status === 400) return 'The request contains invalid parameters.';
+  if (status === 404) return 'The requested statistics could not be found.';
+  if (status === 429) return 'Too many requests. Please try again later.';
+  if (status === 503) return 'Statistics are currently unavailable. Please try again later.';
+  return 'Unable to load statistics. Please try again.';
+}
+
+export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  let timedOut = false;
+  const timeout = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, path.includes('/history') || path.startsWith('/compare')
+    ? HISTORY_TIMEOUT_MS
+    : REQUEST_TIMEOUT_MS);
+
+  if (signal) {
+    signal.addEventListener('abort', abort);
+    if (signal.aborted) controller.abort();
   }
 
-  return (await response.json()) as T;
+  try {
+    const response = await fetch(`/api/v1${path}`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new ApiRequestError(messageForStatus(response.status), response.status);
+    }
+
+    try {
+      return (await response.json()) as T;
+    } catch (error) {
+      if (signal?.aborted || timedOut) throw error;
+      throw new ApiRequestError('The server returned an invalid response.', response.status);
+    }
+  } catch (error) {
+    if (error instanceof ApiRequestError) throw error;
+    if (signal?.aborted) throw error;
+    if (timedOut) {
+      throw new ApiRequestError('The request timed out. Please try again.');
+    }
+    throw new ApiRequestError('Unable to connect to the server. Please check your connection.');
+  } finally {
+    window.clearTimeout(timeout);
+    signal?.removeEventListener('abort', abort);
+  }
 }
 
 export interface HistoryPoint {

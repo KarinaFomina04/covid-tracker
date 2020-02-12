@@ -38,6 +38,14 @@ describe('HistoryService', () => {
     expect(save).toHaveBeenCalledWith(cached);
   });
 
+  it('serves new history when persisting the cache fails', async () => {
+    save.mockRejectedValueOnce(new Error('Disk is read-only'));
+    const result = await service.getHistory('POL', { period: 'all' });
+    expect(result.points).toHaveLength(1);
+    expect(fetchDataset).toHaveBeenCalledTimes(1);
+    expect((await service.getHistory('OWID_WRL', {})).points).toHaveLength(1);
+  });
+
   it('restores a cached dataset without a new download', async () => {
     load.mockResolvedValue(cached);
     expect((await service.getHistory('POL', {})).points).toHaveLength(1);
