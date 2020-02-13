@@ -46,6 +46,48 @@ describe('StatisticsService', () => {
     expect(result.items.map((country) => country.code)).toEqual(['USA', 'POL']);
   });
 
+  it('normalizes search terms and applies the selected sort direction', async () => {
+    const matching = await statistics.getCountries({ search: '  united  ', sortBy: 'name' });
+    expect(matching.items.map((country) => country.code)).toEqual(['USA']);
+
+    const alphabetic = await statistics.getCountries({ sortBy: 'name', order: 'asc' });
+    expect(alphabetic.items.map((country) => country.code)).toEqual(['POL', 'USA']);
+  });
+
+  it('places countries with missing metrics last in both sort directions', async () => {
+    for (const order of ['asc', 'desc'] as const) {
+      const result = await statistics.getCountries({ sortBy: 'newCases', order });
+      expect(result.items.map((country) => country.code)).toEqual(['USA', 'POL']);
+      expect(result.items[1].newCases).toBeNull();
+    }
+  });
+
+  it('returns pagination metadata for a page beyond the available rows', async () => {
+    const result = await statistics.getCountries({ page: 3, limit: 1 });
+    expect(result).toMatchObject({ items: [], total: 2, page: 3, limit: 1, totalPages: 2 });
+  });
+
+  it('reports the source URL, retrieval timestamp and number of countries', async () => {
+    expect(await statistics.getMetadata()).toEqual({
+      source: 'Our World in Data',
+      sourceUrl: 'https://example.org/data.csv',
+      fetchedAt: '2020-12-31T10:00:00Z',
+      dataDate: '2020-12-30',
+      countriesCount: 2,
+    });
+  });
+
+  it('omits fatality ratios if the case denominator is zero', async () => {
+    const sourceWithNoCases = {
+      getDataset: jest.fn().mockResolvedValue({
+        ...dataset,
+        world: { ...dataset.world, totalCases: 0, totalDeaths: 1 },
+      }),
+    } as unknown as DataSyncService;
+    const isolatedService = new StatisticsService(sourceWithNoCases);
+    expect((await isolatedService.getSummary()).caseFatalityRatio).toBeNull();
+  });
+
   it('looks up country codes without case sensitivity', async () => {
     expect((await statistics.getCountry('usa')).name).toBe('United States');
   });

@@ -15,11 +15,11 @@ jobs:
       - name: Install dependencies
         working-directory: client
         run: npm install --no-audit --no-fund
-      - name: Test
+      - name: Test and coverage
         working-directory: client
         env:
           CI: 'true'
-        run: npm test
+        run: npm run test:coverage
       - name: Build
         working-directory: client
         env:
@@ -36,9 +36,9 @@ jobs:
       - name: Install dependencies
         working-directory: server
         run: npm install --no-audit --no-fund
-      - name: Test
+      - name: Test and coverage
         working-directory: server
-        run: npm test
+        run: npm run test:coverage
       - name: HTTP tests
         working-directory: server
         run: npm run test:e2e

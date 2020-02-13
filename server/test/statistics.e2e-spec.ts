@@ -90,6 +90,30 @@ describe('COVID-19 Statistics API', () => {
   it('GET /api/v1/countries rejects invalid pagination', () =>
     request(app.getHttpServer()).get('/api/v1/countries?limit=101').expect(400));
 
+  it('GET /api/v1/countries filters continents case-insensitively', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries?continent=EUROPE')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.total).toBe(1);
+        expect(body.items.map((country: { code: string }) => country.code)).toEqual(['POL']);
+      }));
+
+  it('GET /api/v1/countries applies ascending name order', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries?sortBy=name&order=asc')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.items.map((country: { name: string }) => country.name))
+          .toEqual(['Poland', 'United States']);
+      }));
+
+  it('GET /api/v1/countries rejects unsupported sorting', () =>
+    request(app.getHttpServer()).get('/api/v1/countries?sortBy=unknown').expect(400));
+
+  it('GET /api/v1/countries rejects invalid page values', () =>
+    request(app.getHttpServer()).get('/api/v1/countries?page=-1').expect(400));
+
   it('GET /api/v1/countries returns a consistent validation error', () =>
     request(app.getHttpServer())
       .get('/api/v1/countries?limit=0')
