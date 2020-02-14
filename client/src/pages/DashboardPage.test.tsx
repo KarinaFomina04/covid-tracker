@@ -40,13 +40,13 @@ describe('DashboardPage', () => {
     }));
   });
 
-  it('shows worldwide totals, source coverage and links to reported countries', () => {
+  it('shows worldwide totals, source coverage and links to reported countries', async () => {
     renderDashboard();
     expect(screen.getByRole('heading', { name: 'COVID-19 Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('1,000')).toBeInTheDocument();
     expect(screen.getByText('5%')).toBeInTheDocument();
-    expect(screen.getByText('World map')).toBeInTheDocument();
-    expect(screen.getByText('Trend chart')).toBeInTheDocument();
+    expect(await screen.findByText('World map')).toBeInTheDocument();
+    expect(await screen.findByText('Trend chart')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Poland' })[0]).toHaveAttribute('href', '/countries/POL');
     expect(screen.getByText('countries and territories').closest('.insight-stat')).toHaveTextContent('2');
     expect(useResource).toHaveBeenCalledWith('/countries?sortBy=totalCases&limit=6');

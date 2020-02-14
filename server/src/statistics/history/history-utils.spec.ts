@@ -39,6 +39,22 @@ describe('Historical statistics calculations', () => {
     expect(selected.points).toHaveLength(7);
   });
 
+  it('reuses prepared observations for different ranges of one dataset', () => {
+    const series = Array.from({ length: 31 }, (_, index) => point(index + 1, 3));
+    const full = selectHistory(series, { period: 'all' });
+    const lastWeek = selectHistory(series, { period: '7d' });
+    expect(lastWeek.points.map((item) => item.date)).toEqual(full.points.slice(-7).map((item) => item.date));
+    expect(lastWeek.points[0]).toBe(full.points[24]);
+    expect(lastWeek.points[0].newCasesAverage).toBe(3);
+  });
+
+  it('selects an inclusive range without introducing missing dates', () => {
+    const series = [point(1, 1), point(3, 2), point(5, 3), point(8, 4)];
+    expect(selectHistory(series, { from: '2020-12-02', to: '2020-12-05' })
+      .points.map((item) => item.date)).toEqual(['2020-12-03', '2020-12-05']);
+    expect(selectHistory(series, { from: '2020-12-06', to: '2020-12-07' }).points).toEqual([]);
+  });
+
   it('rejects invalid or inverted ranges', () => {
     const series = [point(1, 5), point(2, 3)];
     expect(() => selectHistory(series, { from: '2020-02-30' })).toThrow();

@@ -29,6 +29,7 @@ export default function HistoryChart({ path, title, population }: HistoryChartPr
   const [perMillion, setPerMillion] = useState(false);
   const [average, setAverage] = useState(true);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const chartInstance = useRef<Chart | null>(null);
   const result = useApiResource<HistoryResponse>(`${path}?period=${period}`);
   const series = useMemo(
     () => buildChartSeries(
@@ -54,11 +55,11 @@ export default function HistoryChart({ path, title, population }: HistoryChartPr
     const chart = new Chart(context, {
       type: 'line',
       data: {
-        labels: series.dates,
+        labels: [],
         datasets: [{
-          label: series.label,
-          data: series.values as number[],
-          borderColor: metric === 'cases' ? '#148eab' : '#d66c77',
+          label: '',
+          data: [] as number[],
+          borderColor: '#148eab',
           backgroundColor: 'rgba(20, 142, 171, 0.07)',
           borderWidth: 2,
           pointRadius: 0,
@@ -80,7 +81,21 @@ export default function HistoryChart({ path, title, population }: HistoryChartPr
         },
       },
     });
-    return () => chart.destroy();
+    chartInstance.current = chart;
+    return () => {
+      chart.destroy();
+      chartInstance.current = null;
+    };
+  }, [series.hasValues]);
+
+  useEffect(() => {
+    const chart = chartInstance.current;
+    if (!chart || !series.hasValues || !chart.data.datasets) return;
+    chart.data.labels = series.dates;
+    chart.data.datasets[0].data = series.values as number[];
+    chart.data.datasets[0].label = series.label;
+    chart.data.datasets[0].borderColor = metric === 'cases' ? '#148eab' : '#d66c77';
+    chart.update(0);
   }, [series, metric]);
 
   return (

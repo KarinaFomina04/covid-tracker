@@ -1,14 +1,16 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Switch } from 'react-router-dom';
-import CountriesPage from './pages/CountriesPage';
-import FavoritesPage from './pages/FavoritesPage';
 import { FavoritesProvider, useFavorites } from './context/FavoritesContext';
-import ComparePage from './pages/ComparePage';
-import CountryDetailsPage from './pages/CountryDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
-import WorldMapPage from './pages/WorldMapPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
+
+const CountriesPage = lazy(() => import('./pages/CountriesPage'));
+const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage'));
+const CountryDetailsPage = lazy(() => import('./pages/CountryDetailsPage'));
+const WorldMapPage = lazy(() => import('./pages/WorldMapPage'));
 
 function AppLayout(): JSX.Element {
   const { favoriteCodes } = useFavorites();
@@ -31,7 +33,8 @@ function AppLayout(): JSX.Element {
           </div>
         </header>
 
-        <Switch>
+        <Suspense fallback={<main className="container page-content" role="status">Loading page…</main>}>
+          <Switch>
           <Route exact path="/" component={DashboardPage} />
           <Route exact path="/countries" component={CountriesPage} />
           <Route exact path="/map" component={WorldMapPage} />
@@ -39,7 +42,8 @@ function AppLayout(): JSX.Element {
           <Route exact path="/compare" component={ComparePage} />
           <Route exact path="/countries/:code" component={CountryDetailsPage} />
           <Route component={NotFoundPage} />
-        </Switch>
+          </Switch>
+        </Suspense>
 
         <footer className="site-footer">
           <div className="container site-footer__inner">

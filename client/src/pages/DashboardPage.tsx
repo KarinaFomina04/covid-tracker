@@ -1,13 +1,15 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { CountriesResponse, DatasetMetadata, GlobalStatistics } from '../api/statistics';
 import ApiStatus from '../components/ApiStatus';
 import AsyncState from '../components/AsyncState';
 import CountryTable from '../components/CountryTable';
-import HistoryChart from '../components/charts/HistoryChart';
 import StatisticsCard from '../components/StatisticsCard';
-import WorldMapPanel from '../components/map/WorldMapPanel';
 import { useApiResource } from '../hooks/useApiResource';
 import { formatDate, formatNumber, formatTimestamp } from '../utils';
+
+const HistoryChart = lazy(() => import('../components/charts/HistoryChart'));
+const WorldMapPanel = lazy(() => import('../components/map/WorldMapPanel'));
 
 export default function DashboardPage(): JSX.Element {
   const summary = useApiResource<GlobalStatistics>('/summary');
@@ -58,9 +60,13 @@ export default function DashboardPage(): JSX.Element {
           </div>
         )}
 
-        <HistoryChart path="/summary/history" title="Worldwide outbreak trends" population={summary.data?.population || null} />
+        <Suspense fallback={<AsyncState message="Loading trend chart…" />}>
+          <HistoryChart path="/summary/history" title="Worldwide outbreak trends" population={summary.data?.population || null} />
+        </Suspense>
 
-        <WorldMapPanel />
+        <Suspense fallback={<AsyncState message="Loading world map…" />}>
+          <WorldMapPanel />
+        </Suspense>
 
         <div className="dashboard-columns">
           <section className="surface-panel" aria-labelledby="ranking-title">

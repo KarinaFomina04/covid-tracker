@@ -55,6 +55,41 @@ export function withMovingAverages(points: HistoryPoint[]): HistoryObservation[]
   }));
 }
 
+// The history source stores an immutable observation array for each country.
+// Cache its derived seven-day averages and release them with the source array.
+const preparedSeries = new WeakMap<HistoryPoint[], HistoryObservation[]>();
+
+function preparedHistory(points: HistoryPoint[]): HistoryObservation[] {
+  let prepared = preparedSeries.get(points);
+  if (!prepared) {
+    prepared = withMovingAverages(points);
+    preparedSeries.set(points, prepared);
+  }
+  return prepared;
+}
+
+function firstAtOrAfter(points: HistoryObservation[], date: string): number {
+  let left = 0;
+  let right = points.length;
+  while (left < right) {
+    const middle = Math.floor((left + right) / 2);
+    if (points[middle].date < date) left = middle + 1;
+    else right = middle;
+  }
+  return left;
+}
+
+function firstAfter(points: HistoryObservation[], date: string): number {
+  let left = 0;
+  let right = points.length;
+  while (left < right) {
+    const middle = Math.floor((left + right) / 2);
+    if (points[middle].date <= date) left = middle + 1;
+    else right = middle;
+  }
+  return left;
+}
+
 export function selectHistory(
   points: HistoryPoint[],
   query: { period?: HistoryPeriod; from?: string; to?: string },
@@ -76,7 +111,7 @@ export function selectHistory(
   const to = query.to || lastObservation;
   if (from > to) throw new BadRequestException('From date must be earlier than to date');
 
-  const observations = withMovingAverages(points)
-    .filter((point) => point.date >= from && point.date <= to);
+  const prepared = preparedHistory(points);
+  const observations = prepared.slice(firstAtOrAfter(prepared, from), firstAfter(prepared, to));
   return { from, to, lastObservation, points: observations };
 }

@@ -1,8 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import HistoryChart from './HistoryChart';
 import * as csvExport from '../../utils/csv-export';
+import Chart from 'chart.js';
 
-jest.mock('chart.js', () => jest.fn().mockImplementation(() => ({ destroy: jest.fn() })));
+jest.mock('chart.js', () => jest.fn().mockImplementation((_ctx, config) => ({
+  data: config.data,
+  update: jest.fn(),
+  destroy: jest.fn(),
+})));
 
 const history = {
   code: 'POL', from: '2020-12-01', to: '2020-12-31', lastObservation: '2020-12-31',
@@ -46,4 +51,16 @@ test('downloads the displayed metric and period as CSV', async () => {
   } finally {
     download.mockRestore();
   }
+});
+
+
+test('updates the existing chart instead of creating a new instance for every indicator', async () => {
+  const chartConstructor = Chart as unknown as jest.Mock;
+  chartConstructor.mockClear();
+  render(<HistoryChart path="/countries/POL/history" title="Poland: trends" population={38000000} />);
+  await screen.findByRole('img', { name: /total confirmed cases/i });
+  expect(chartConstructor).toHaveBeenCalledTimes(1);
+  fireEvent.change(screen.getByLabelText('Chart indicator'), { target: { value: 'deaths' } });
+  await waitFor(() => expect(screen.getByRole('img', { name: /total reported deaths/i })).toBeInTheDocument());
+  expect(chartConstructor).toHaveBeenCalledTimes(1);
 });

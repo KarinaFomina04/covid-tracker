@@ -52,6 +52,29 @@ describe('useApiResource', () => {
     await waitFor(() => expect(screen.getByTestId('result')).toHaveTextContent('Italy'));
   });
 
+  it('shares an in-flight request between two consumers of the same URL', async () => {
+    let resolve!: (value: { name: string }) => void;
+    request.mockReturnValue(new Promise((done) => { resolve = done; }));
+    render(<><Resource path="/countries/POL" /><Resource path="/countries/POL" /></>);
+    expect(request).toHaveBeenCalledTimes(1);
+    await act(async () => { resolve({ name: 'Poland' }); });
+    expect(screen.getAllByText('Poland')).toHaveLength(2);
+  });
+
+  it('restores a recent result after unmounting and allows explicit refresh', async () => {
+    request.mockResolvedValueOnce({ name: 'Poland' })
+      .mockResolvedValueOnce({ name: 'Poland, refreshed' });
+    const view = render(<Resource path="/countries/POL" />);
+    expect(await screen.findByText('Poland')).toBeInTheDocument();
+    view.unmount();
+    render(<Resource path="/countries/POL" />);
+    expect(screen.getByTestId('result')).toHaveTextContent('Poland');
+    expect(request).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    expect(await screen.findByText('Poland, refreshed')).toBeInTheDocument();
+    expect(request).toHaveBeenCalledTimes(2);
+  });
+
   it('aborts pending requests when the component unmounts', () => {
     request.mockReturnValue(new Promise(() => undefined));
     const view = render(<Resource path="/summary" />);
