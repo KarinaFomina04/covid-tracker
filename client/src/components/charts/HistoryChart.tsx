@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js';
 import { HistoryResponse } from '../../api/statistics';
 import { useApiResource } from '../../hooks/useApiResource';
-import { formatDate } from '../../utils';
+import { formatDate, formatNumber } from '../../utils';
 import { downloadCsv, historyToCsv } from '../../utils/csv-export';
 import AsyncState from '../AsyncState';
 import { buildChartSeries, ChartMetric, ChartMode } from './chart-series';
@@ -166,11 +166,30 @@ export default function HistoryChart({ path, title, population }: HistoryChartPr
           {!series.hasValues ? (
             <AsyncState message="No historical observations are available for the selected metric and period." />
           ) : (
-            <div className="history-canvas">
-              <canvas ref={canvas} role="img" aria-label={`${series.label} from ${result.data.from} to ${result.data.to}`}>
-                Historical statistics chart
-              </canvas>
-            </div>
+            <>
+              <div className="history-canvas">
+                <canvas ref={canvas} role="img" aria-label={`${series.label} from ${result.data.from} to ${result.data.to}`}>
+                  Historical statistics chart
+                </canvas>
+              </div>
+              <details className="chart-data-details">
+                <summary>View recent chart values as a table</summary>
+                <div className="table-scroll" role="region" aria-label="Recent historical observations" tabIndex={0}>
+                  <table className="data-table">
+                    <caption className="sr-only">Last 30 observations for {series.label}</caption>
+                    <thead><tr><th scope="col">Date</th><th scope="col" className="numeric">{series.label}</th></tr></thead>
+                    <tbody>
+                      {series.dates.slice(-30).map((date, index) => (
+                        <tr key={date}>
+                          <td>{formatDate(date)}</td>
+                          <td className="numeric">{formatNumber(series.values[series.values.length - Math.min(30, series.values.length) + index], perMillion ? 2 : 1)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            </>
           )}
           <p className="history-footnote">
             Observations: {formatDate(result.data.from)} – {formatDate(result.data.to)}.

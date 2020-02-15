@@ -2,7 +2,7 @@ import WorldMapPanel from '../components/map/WorldMapPanel';
 
 export default function WorldMapPage(): JSX.Element {
   return (
-    <main className="container page-content">
+    <main id="main-content" tabIndex={-1} className="container page-content">
       <header className="page-heading">
         <p className="eyebrow eyebrow--muted">GEOGRAPHICAL OVERVIEW</p>
         <h1>Global outbreak map</h1>

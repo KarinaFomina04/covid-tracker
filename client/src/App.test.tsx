@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
 
 const world = {
@@ -40,4 +40,19 @@ test('displays the global dashboard and reported figures', async () => {
   expect(screen.getByRole('heading', { level: 1, name: 'COVID-19 Dashboard' })).toBeInTheDocument();
   expect(await screen.findByText('70,000,000')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Countries' })).toHaveAttribute('href', '/countries');
+});
+
+test('provides a skip link and a collapsible navigation menu', async () => {
+  render(<App />);
+  expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
+  expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content');
+
+  const toggle = screen.getByRole('button', { name: 'Open menu' });
+  expect(toggle).toHaveAttribute('aria-controls', 'primary-navigation');
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(toggle);
+  expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByRole('navigation', { name: 'Main navigation' })).toHaveClass('site-nav--open');
+  fireEvent.click(screen.getByRole('link', { name: 'Countries' }));
+  expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');
 });

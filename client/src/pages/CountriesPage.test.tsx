@@ -60,3 +60,10 @@ test('downloads the current filtered table page as CSV', async () => {
     download.mockRestore();
   }
 });
+
+test('offers a keyboard-scrollable labelled statistics table', async () => {
+  render(<MemoryRouter><FavoritesProvider><CountriesPage /></FavoritesProvider></MemoryRouter>);
+  const region = await screen.findByRole('region', { name: 'Country statistics table' });
+  expect(region).toHaveAttribute('tabindex', '0');
+  expect(screen.getByRole('table', { name: /covid-19 statistics by country/i })).toBeInTheDocument();
+});

@@ -13,8 +13,9 @@ export default function CountryTable({ countries }: CountryTableProps): JSX.Elem
   }
 
   return (
-    <div className="table-scroll">
+    <div className="table-scroll" role="region" aria-label="Country statistics table" tabIndex={0}>
       <table className="data-table">
+        <caption className="sr-only">COVID-19 statistics by country. Scroll horizontally to view all columns on smaller screens.</caption>
         <thead>
           <tr>
             <th scope="col">Country</th>

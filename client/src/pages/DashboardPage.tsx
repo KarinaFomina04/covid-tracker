@@ -40,7 +40,7 @@ export default function DashboardPage(): JSX.Element {
         </div>
       </section>
 
-      <main className="container page-content">
+      <main id="main-content" tabIndex={-1} className="container page-content">
         <div className="section-header">
           <div>
             <p className="eyebrow eyebrow--muted">AT A GLANCE</p>

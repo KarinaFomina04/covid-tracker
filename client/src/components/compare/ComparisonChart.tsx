@@ -64,14 +64,15 @@ export default function ComparisonChart({ data }: { data: ComparisonResponse }):
       </div>
       {hasValues ? (
         <div className="comparison-canvas">
-          <canvas ref={canvas} role="img" aria-label="Comparison of selected countries over time">
+          <canvas ref={canvas} role="img" aria-label={`Comparison of ${data.countries.map((country) => country.name).join(", ")} from ${data.from} to ${data.to}`}>
             Historical comparison of selected countries
           </canvas>
         </div>
       ) : <AsyncState message="No comparable values are available for this indicator and period." />}
-      <div className="table-scroll">
+      <div className="table-scroll" role="region" aria-label="Latest values by country" tabIndex={0}>
         <table className="data-table comparison-table">
-          <thead><tr><th>Country</th><th className="numeric">Latest available value</th><th>Observation date</th></tr></thead>
+          <caption className="sr-only">Latest available values for selected countries</caption>
+          <thead><tr><th scope="col">Country</th><th scope="col" className="numeric">Latest available value</th><th scope="col">Observation date</th></tr></thead>
           <tbody>
             {data.countries.map((country, index) => (
               <tr key={country.code}>

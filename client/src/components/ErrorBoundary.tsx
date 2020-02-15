@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <main className="container page-content" role="alert">
+        <main id="main-content" tabIndex={-1} className="container page-content" role="alert">
           <div className="notice notice--error">
             <h1>Unable to display this page</h1>
             <p>An unexpected error occurred. Reload the page to try again.</p>

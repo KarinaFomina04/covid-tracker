@@ -44,7 +44,7 @@ export default function CountriesPage(): JSX.Element {
   };
 
   return (
-    <main className="container page-content">
+    <main id="main-content" tabIndex={-1} className="container page-content">
       <div className="page-heading">
         <div>
           <p className="eyebrow eyebrow--muted">COUNTRY DIRECTORY</p>

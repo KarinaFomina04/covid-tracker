@@ -13,7 +13,7 @@ export default function CountryDetailsPage(): JSX.Element {
   const result = useApiResource<CountryStatistics>(`/countries/${encodeURIComponent(code)}`);
 
   return (
-    <main className="container page-content">
+    <main id="main-content" tabIndex={-1} className="container page-content">
       <Link className="back-link" to="/countries"><span aria-hidden="true">←</span> All countries</Link>
       {result.loading && <AsyncState />}
       {result.error && <AsyncState error={result.error} retry={result.retry} />}

@@ -42,7 +42,7 @@ export default function FavoritesPage(): JSX.Element {
   const { favoriteCodes } = useFavorites();
 
   return (
-    <main className="container page-content">
+    <main id="main-content" tabIndex={-1} className="container page-content">
       <div className="page-heading">
         <p className="eyebrow eyebrow--muted">MY COUNTRIES</p>
         <h1>Favorite countries</h1>

@@ -64,3 +64,13 @@ test('updates the existing chart instead of creating a new instance for every in
   await waitFor(() => expect(screen.getByRole('img', { name: /total reported deaths/i })).toBeInTheDocument());
   expect(chartConstructor).toHaveBeenCalledTimes(1);
 });
+
+test('provides recent observations in an accessible data table', async () => {
+  render(<HistoryChart path="/countries/POL/history" title="Poland: trends" population={38000000} />);
+  await screen.findByRole('img', { name: /total confirmed cases/i });
+  fireEvent.click(screen.getByText('View recent chart values as a table'));
+  const table = screen.getByRole('table', { name: /last 30 observations/i });
+  expect(table).toHaveTextContent('31 Dec 2020');
+  expect(table).toHaveTextContent('100');
+  expect(screen.getByRole('region', { name: 'Recent historical observations' })).toHaveAttribute('tabindex', '0');
+});

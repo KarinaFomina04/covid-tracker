@@ -44,7 +44,7 @@ export default function ComparePage(): JSX.Element {
   };
 
   return (
-    <main className="container page-content">
+    <main id="main-content" tabIndex={-1} className="container page-content">
       <header className="page-heading">
         <p className="eyebrow eyebrow--muted">ANALYTICS</p>
         <h1>Compare countries</h1>
