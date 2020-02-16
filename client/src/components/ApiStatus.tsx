@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getJson } from '../api/statistics';
 
 type ConnectionStatus = 'connecting' | 'connected' | 'unavailable';
 
@@ -17,29 +18,19 @@ export default function ApiStatus(): JSX.Element {
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
 
   useEffect(() => {
-    let active = true;
+    const controller = new AbortController();
 
-    fetch('/api/v1/health')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Health check failed');
-        }
-        return response.json() as Promise<HealthResponse>;
-      })
+    getJson<HealthResponse>('/health', controller.signal)
       .then((result) => {
-        if (active) {
+        if (!controller.signal.aborted) {
           setStatus(result.status === 'ok' ? 'connected' : 'unavailable');
         }
       })
       .catch(() => {
-        if (active) {
-          setStatus('unavailable');
-        }
+        if (!controller.signal.aborted) setStatus('unavailable');
       });
 
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, []);
 
   return (

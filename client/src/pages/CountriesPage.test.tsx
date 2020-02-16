@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import CountriesPage from './CountriesPage';
 import { FavoritesProvider } from '../context/FavoritesContext';
 import * as csvExport from '../utils/csv-export';
+import { clearResourceCache } from '../api/resource-cache';
 
 const countriesResponse = {
   items: [{
@@ -14,6 +15,7 @@ const countriesResponse = {
 };
 
 beforeEach(() => {
+  clearResourceCache();
   window.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => countriesResponse });
 });
 
@@ -66,4 +68,24 @@ test('offers a keyboard-scrollable labelled statistics table', async () => {
   const region = await screen.findByRole('region', { name: 'Country statistics table' });
   expect(region).toHaveAttribute('tabindex', '0');
   expect(screen.getByRole('table', { name: /covid-19 statistics by country/i })).toBeInTheDocument();
+});
+
+test('returns to the last available page when the result count shrinks', async () => {
+  (window.fetch as jest.Mock).mockImplementation((url: string) => {
+    const params = new URL(url, 'http://localhost').searchParams;
+    const requestedPage = Number(params.get('page'));
+    return Promise.resolve({
+      ok: true,
+      json: async () => requestedPage === 2
+        ? { ...countriesResponse, page: 2, total: 1, totalPages: 1, items: [] }
+        : { ...countriesResponse, total: 13, totalPages: 2 },
+    });
+  });
+  render(<MemoryRouter><FavoritesProvider><CountriesPage /></FavoritesProvider></MemoryRouter>);
+  expect(await screen.findByText('Page 1 of 2')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await waitFor(() => expect((window.fetch as jest.Mock).mock.calls.some(([url]: [string]) =>
+    url.includes('page=2'))).toBe(true));
+  await waitFor(() => expect(screen.getByText('Page 1 of 2')).toBeInTheDocument());
+  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
 });

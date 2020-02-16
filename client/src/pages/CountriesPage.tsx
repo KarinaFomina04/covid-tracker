@@ -28,6 +28,11 @@ export default function CountriesPage(): JSX.Element {
     search, continent, sortBy, order, page: String(page), limit: String(PAGE_SIZE),
   });
   const response = useApiResource<CountriesResponse>(`/countries?${params.toString()}`);
+  useEffect(() => {
+    if (!response.data) return;
+    const lastPage = Math.max(1, response.data.totalPages);
+    if (page > lastPage) setPage(lastPage);
+  }, [response.data, page]);
   const handleContinent = (event: ChangeEvent<HTMLSelectElement>) => {
     setContinent(event.target.value);
     setPage(1);

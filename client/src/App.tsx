@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Link, NavLink, Route, Switch } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { BrowserRouter, Link, NavLink, Route, Switch, useLocation } from 'react-router-dom';
 import { FavoritesProvider, useFavorites } from './context/FavoritesContext';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -15,11 +15,24 @@ const WorldMapPage = lazy(() => import('./pages/WorldMapPage'));
 function AppLayout(): JSX.Element {
   const { favoriteCodes } = useFavorites();
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
   const closeMenu = () => setMenuOpen(false);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [menuOpen]);
+
   return (
-    <BrowserRouter>
-      <div className="app-shell">
+    <div className="app-shell">
         <a className="skip-link" href="#main-content">Skip to main content</a>
         <header className="site-header">
           <div className="container site-header__inner">
@@ -69,11 +82,10 @@ function AppLayout(): JSX.Element {
             <span>COVID-19 data from Our World in Data</span>
           </div>
         </footer>
-      </div>
-    </BrowserRouter>
+    </div>
   );
 }
 
 export default function App(): JSX.Element {
-  return <ErrorBoundary><FavoritesProvider><AppLayout /></FavoritesProvider></ErrorBoundary>;
+  return <ErrorBoundary><FavoritesProvider><BrowserRouter><AppLayout /></BrowserRouter></FavoritesProvider></ErrorBoundary>;
 }

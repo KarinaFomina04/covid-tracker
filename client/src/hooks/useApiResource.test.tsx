@@ -5,8 +5,8 @@ import { useApiResource } from './useApiResource';
 jest.mock('../api/statistics', () => ({ getJson: jest.fn() }));
 const request = getJson as unknown as jest.Mock;
 
-function Resource({ path }: { path: string }): JSX.Element {
-  const { data, error, loading, retry } = useApiResource<{ name: string }>(path);
+function Resource({ path, enabled = true }: { path: string; enabled?: boolean }): JSX.Element {
+  const { data, error, loading, retry } = useApiResource<{ name: string }>(path, enabled);
   return (
     <div>
       <span data-testid="result">{loading ? 'Loading' : error || data?.name || 'Empty'}</span>
@@ -82,5 +82,19 @@ describe('useApiResource', () => {
     expect(signal.aborted).toBe(false);
     view.unmount();
     expect(signal.aborted).toBe(true);
+  });
+});
+
+describe('optional resource loading', () => {
+  it('does not request a disabled resource, then loads after it is enabled', async () => {
+    request.mockReset().mockResolvedValue({ name: 'France' });
+    const view = render(<Resource path="/countries/FRA" enabled={false} />);
+    expect(screen.getByTestId('result')).toHaveTextContent('Empty');
+    expect(request).not.toHaveBeenCalled();
+    view.rerender(<Resource path="/countries/FRA" enabled />);
+    expect(await screen.findByText('France')).toBeInTheDocument();
+    expect(request).toHaveBeenCalledTimes(1);
+    view.rerender(<Resource path="/countries/FRA" enabled={false} />);
+    expect(screen.getByTestId('result')).toHaveTextContent('Empty');
   });
 });

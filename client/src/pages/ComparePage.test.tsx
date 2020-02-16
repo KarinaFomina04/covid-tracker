@@ -51,3 +51,18 @@ test('allows adding a country without selecting duplicates', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Remove country 3' }));
   expect(screen.queryByLabelText('Country 3')).not.toBeInTheDocument();
 });
+
+test('does not request a comparison until custom dates form a valid range', async () => {
+  render(<MemoryRouter><ComparePage /></MemoryRouter>);
+  await screen.findByRole('img', { name: 'Comparison of selected countries over time' });
+  const fetchMock = window.fetch as jest.Mock;
+  fireEvent.change(screen.getByLabelText('Comparison period'), { target: { value: 'custom' } });
+  expect(screen.getByText('Choose a start date and an end date to compare countries.')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Comparison from date'), { target: { value: '2020-12-31' } });
+  fireEvent.change(screen.getByLabelText('Comparison to date'), { target: { value: '2020-12-01' } });
+  expect(screen.getByRole('alert')).toHaveTextContent('The start date must not be later than the end date.');
+  expect(fetchMock.mock.calls.some(([url]: [string]) => url.includes('from=2020-12-31'))).toBe(false);
+  fireEvent.change(screen.getByLabelText('Comparison to date'), { target: { value: '2020-12-31' } });
+  await waitFor(() => expect(fetchMock.mock.calls.some(([url]: [string]) =>
+    url.includes('from=2020-12-31') && url.includes('to=2020-12-31'))).toBe(true));
+});

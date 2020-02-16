@@ -56,3 +56,19 @@ test('provides a skip link and a collapsible navigation menu', async () => {
   fireEvent.click(screen.getByRole('link', { name: 'Countries' }));
   expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');
 });
+
+test('closes the mobile menu when Escape is pressed', () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+  expect(screen.getByRole('navigation', { name: 'Main navigation' })).toHaveClass('site-nav--open');
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('closes the menu when navigation changes outside the menu', async () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+  // Browser history changes trigger a location update without a navigation link click.
+  fireEvent.click(screen.getByRole('link', { name: /compare countries/i }));
+  expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');
+});

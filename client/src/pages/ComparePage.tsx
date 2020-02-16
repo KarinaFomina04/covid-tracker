@@ -25,11 +25,12 @@ export default function ComparePage(): JSX.Element {
     (countries.data?.items || []).slice().sort((a, b) => a.name.localeCompare(b.name)),
   [countries.data]);
 
+  const validCustomRange = period !== 'custom' || (Boolean(from) && Boolean(to) && from <= to);
   const params = new URLSearchParams({ codes: codes.join(','), metric, scale });
   if (period !== 'custom') params.set('period', period);
   if (period === 'custom' && from) params.set('from', from);
   if (period === 'custom' && to) params.set('to', to);
-  const result = useApiResource<ComparisonResponse>(`/compare?${params.toString()}`);
+  const result = useApiResource<ComparisonResponse>(`/compare?${params.toString()}`, validCustomRange);
 
   const updateCountry = (index: number, code: string) => {
     if (codes.some((item, position) => position !== index && item === code)) return;
@@ -117,6 +118,11 @@ export default function ComparePage(): JSX.Element {
         )}
       </section>
 
+      {period === 'custom' && !validCustomRange && (
+        from && to && from > to
+          ? <p className="notice notice--error" role="alert">The start date must not be later than the end date.</p>
+          : <p className="notice" role="status">Choose a start date and an end date to compare countries.</p>
+      )}
       {result.loading && <AsyncState />}
       {result.error && <AsyncState error={result.error} retry={result.retry} />}
       {result.data && <ComparisonChart data={result.data} />}
