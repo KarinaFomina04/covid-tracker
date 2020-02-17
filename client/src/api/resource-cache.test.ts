@@ -76,3 +76,31 @@ test('limits cached URLs to avoid retaining every search query', async () => {
   expect(peekResource('/countries?search=0')).toBeNull();
   expect(peekResource('/countries?search=32')).toEqual({ path: '/countries?search=32' });
 });
+
+
+test('does not cache failed requests or retain rejected work', async () => {
+  request.mockRejectedValueOnce(new Error('Temporary outage'))
+    .mockResolvedValueOnce({ totalCases: 42 });
+  await expect(loadResource('/regression')).rejects.toThrow('Temporary outage');
+  expect(peekResource('/regression')).toBeNull();
+  await expect(loadResource('/regression')).resolves.toEqual({ totalCases: 42 });
+  expect(request).toHaveBeenCalledTimes(2);
+});
+
+test('rejects an already aborted reader without issuing a request', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  await expect(loadResource('/aborted', controller.signal)).rejects.toThrow('Request cancelled');
+  expect(request).not.toHaveBeenCalled();
+});
+
+test('evicts the least recently accessed resource', async () => {
+  request.mockImplementation(async (path: string) => ({ path }));
+  for (let index = 0; index < 32; index += 1) {
+    await loadResource(`/lru/${index}`);
+  }
+  expect(peekResource('/lru/0')).toEqual({ path: '/lru/0' });
+  await loadResource('/lru/32');
+  expect(peekResource('/lru/1')).toBeNull();
+  expect(peekResource('/lru/0')).toEqual({ path: '/lru/0' });
+});

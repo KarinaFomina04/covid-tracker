@@ -202,6 +202,59 @@ describe('COVID-19 Statistics API', () => {
         expect(body).toMatchObject({ state: 'ready', hasData: true });
       }));
 
+
+  it('GET /api/v1/countries returns an empty page for unmatched search terms', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries?search=nonexistent-country')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.items).toEqual([]);
+        expect(body.total).toBe(0);
+      }));
+
+  it('GET /api/v1/countries handles requests past the last page', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries?page=999&limit=1')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.items).toEqual([]);
+        expect(body.total).toBe(2);
+        expect(body.page).toBe(999);
+      }));
+
+  it('GET /api/v1/countries validates the sort order', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries?order=sideways')
+      .expect(400));
+
+  it('GET /api/v1/countries/:code normalizes lowercase country codes', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries/pol')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.code).toBe('POL');
+      }));
+
+  it('GET /api/v1/countries/:code rejects invalid country identifiers', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries/12345')
+      .expect(400));
+
+  it('GET /api/v1/compare rejects unsupported statistic scales', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/compare?codes=POL,USA&scale=percent')
+      .expect(400));
+
+  it('GET /api/v1/summary/history rejects incompatible date filters', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/summary/history?period=7d&from=2020-12-01')
+      .expect(400));
+
+  it('GET /api/v1/countries/:code/history returns not found for an absent country', () =>
+    request(app.getHttpServer())
+      .get('/api/v1/countries/GBR/history')
+      .expect(404));
+
   it('GET /api/v1/meta reports the data observation date', () =>
     request(app.getHttpServer())
       .get('/api/v1/meta')

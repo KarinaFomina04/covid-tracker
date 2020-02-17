@@ -384,3 +384,18 @@ covid-tracker/
 дат проверяется до отправки запроса: обе даты должны быть заданы, а начальная
 дата не может быть позднее конечной. Индикатор доступности API использует
 общий HTTP-клиент с тайм-аутом и отменой запроса при размонтировании компонента.
+
+### Integration and regression tests
+
+Backend HTTP integration tests use Jest and Supertest with deterministic source fixtures.
+The test suite covers invalid query parameters, absent observations, pagination boundaries, and history endpoints.
+Frontend regression tests use Jest and React Testing Library for the shared request cache and comparison results.
+
+```bash
+cd server
+npm run test:e2e
+npm run test:coverage
+
+cd ../client
+npm test -- --watchAll=false
+```
