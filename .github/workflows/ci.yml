@@ -12,6 +12,11 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14.15.3'
+      - name: Cache npm downloads
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-client-${{ hashFiles('client/package.json') }}
       - name: Install dependencies
         working-directory: client
         run: npm install --no-audit --no-fund
@@ -33,6 +38,11 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14.15.3'
+      - name: Cache npm downloads
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-server-${{ hashFiles('server/package.json') }}
       - name: Install dependencies
         working-directory: server
         run: npm install --no-audit --no-fund

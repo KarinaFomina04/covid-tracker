@@ -8,6 +8,10 @@ RUN npm install --no-audit --no-fund
 COPY tsconfig.json ./
 COPY public ./public
 COPY src ./src
+
+# Omit source maps and move the runtime chunk into a cacheable asset.
+ENV GENERATE_SOURCEMAP=false
+ENV INLINE_RUNTIME_CHUNK=false
 RUN npm run build
 
 FROM nginx:1.19-alpine

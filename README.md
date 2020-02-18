@@ -399,3 +399,32 @@ npm run test:coverage
 cd ../client
 npm test -- --watchAll=false
 ```
+
+## Production build and static assets
+
+The production web image builds the React application with `GENERATE_SOURCEMAP=false`
+and `INLINE_RUNTIME_CHUNK=false`. This keeps source maps out of the deployment
+and serves the runtime as a separate fingerprinted asset. It does not change the
+local development build.
+
+Nginx compresses text assets when supported by the browser. Files in `/static/`
+have content-hashed filenames and can be cached for one year with `immutable`.
+The HTML document is revalidated so users can obtain references to new assets
+after deployment. Missing `/static/` files return HTTP 404 instead of the SPA
+HTML entrypoint; client-side routes still fall back to `index.html`.
+
+The CI workflow caches npm downloads separately for the client and server.
+Cache keys depend on their respective `package.json` files; this reduces
+redundant downloads but does not replace installing dependencies.
+
+To inspect response headers after starting the production stack:
+
+```bash
+docker-compose up -d --build
+curl -I http://localhost:8080/
+curl -I http://localhost:8080/static/js/main.example.js
+```
+
+The last command should return 404 for a nonexistent asset. To inspect the
+cache headers on an existing asset, substitute an asset URL from the generated
+`client/build/asset-manifest.json` file.
