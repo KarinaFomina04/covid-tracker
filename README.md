@@ -10,6 +10,7 @@ COVID-19 Tracker — веб-приложение для просмотра ми�
 - [Тестирование](#тестирование)
 - [Deploy и CI/CD](#deploy-и-cicd)
 - [Структура проекта](#структура-проекта)
+- [Документация](#документация)
 
 ## Технологии
 
@@ -428,3 +429,10 @@ curl -I http://localhost:8080/static/js/main.example.js
 The last command should return 404 for a nonexistent asset. To inspect the
 cache headers on an existing asset, substitute an asset URL from the generated
 `client/build/asset-manifest.json` file.
+
+
+## Документация
+
+- [REST API](docs/API.md) — маршруты, параметры, форматы ошибок и примеры запросов.
+- [Источники данных](docs/DATA.md) — CSV, синхронизация, локальный кэш и правила интерпретации показателей.
+- [Развёртывание](docs/DEPLOYMENT.md) — Docker Compose, CI и диагностика распространённых ошибок.
