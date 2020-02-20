@@ -64,3 +64,13 @@ cd .. && docker-compose up -d --build
 | Saved data disappears | Whether the named volume was deleted or cache paths changed |
 
 A remote CI/CD deployment pipeline is not configured; deployment credentials and target infrastructure must be supplied separately.
+
+## Release verification and container health
+
+Run `sh scripts/verify-release.sh` from the repository root to execute tests,
+build both applications, validate Compose and build images. The published web
+port defaults to 8080 and can be overridden with `WEB_PORT`. API and web
+containers expose Docker health status; `GET /api/v1/health` checks process
+availability, not data freshness. Check `/api/v1/sync/status` separately.
+
+See [Release checklist](RELEASE.md) for rollout and rollback procedures.

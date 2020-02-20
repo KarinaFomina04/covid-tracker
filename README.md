@@ -436,3 +436,13 @@ cache headers on an existing asset, substitute an asset URL from the generated
 - [REST API](docs/API.md) — маршруты, параметры, форматы ошибок и примеры запросов.
 - [Источники данных](docs/DATA.md) — CSV, синхронизация, локальный кэш и правила интерпретации показателей.
 - [Развёртывание](docs/DEPLOYMENT.md) — Docker Compose, CI и диагностика распространённых ошибок.
+
+## Подготовка релиза
+
+Для проверки тестов, production-сборки и Docker-образов выполните
+`sh scripts/verify-release.sh` из корня репозитория. Команда требует npm Registry
+и запущенного Docker Engine. После успешной проверки запустите
+`docker-compose up -d --build` и проверьте `GET /api/v1/health` и
+`GET /api/v1/sync/status`. Порт веб-сервиса можно задать через `WEB_PORT`.
+
+Подробные инструкции и контрольный список: [Release](docs/RELEASE.md).
